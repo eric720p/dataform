@@ -1,0 +1,68 @@
+{
+  "result": [
+    {
+      "timeframe": { 
+        "start": "2014-01-12T07:00:00.000Z", 
+        "end": "2014-01-19T07:00:00.000Z" 
+      },
+      "value": [
+      {
+        "page": "home",
+        "result": {
+          "number": {
+            "value": 20
+          }
+        }
+      },
+      {
+        "page": "contact",
+        "result": {
+          "number": {
+            "value": 14
+          }
+        }
+      },
+      {
+        "page": "about",
+        "result": {
+          "number": {
+            "value": 5
+          }
+        }
+      }
+      ]
+    },
+    {
+      "timeframe": { 
+        "start": "2013-01-12T07:00:00.000Z", 
+        "end": "2013-01-19T07:00:00.000Z" 
+      },
+      "value": [
+        {
+          "page": "home",
+          "result": {
+            "number": {
+              "value": 121
+            }
+          }
+        },
+        {
+          "page": "contact",
+          "result": {
+            "number": {
+              "value": 543
+            }
+          }
+        },
+        {
+          "page": "about",
+          "result": {
+            "number": {
+              "value": 1
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>dataform</title>
+
+  <!-- Testing framework assets -->
+	<link rel="stylesheet" href="./assets/mocha/mocha.css" />
+	<script src="./assets/mocha/mocha.js"></script>
+	<script src="./assets/chai/chai.js"></script>
+	<script src="./assets/sinon/index.js"></script>
+	<script src="./assets/sinon-ie/index.js"></script>
+
+  <!-- Misc. dependencies -->
+  <script src="./assets/jquery/dist/jquery.min.js"></script>
+
+  <!-- File(s) to be tested -->
+  <script src="./dist/dataform.js"></script>
+
+  <!-- Setup -->
+	<script>mocha.setup('bdd')</script>
+	<script src="./test-helpers.js"></script>
+
+  <!-- Tests -->
+  <script src="./test-spec.js"></script>
+
+  <!-- Initialize -->
+	<script>
+		var init = function(){
+			var runner = mocha.run(),
+          failedTests = [];
+
+			runner.on('end', function(){
+				window.mochaResults = runner.stats;
+				window.mochaResults.reports = failedTests;
+			});
+			runner.on('fail', logFailure);
+
+			function logFailure(test, err){
+				var flattenTitles = function(test){
+					var titles = [];
+					while (test.parent.title){
+						titles.push(test.parent.title);
+						test = test.parent;
+					}
+					return titles.reverse();
+				};
+				failedTests.push({name: test.title, result: false, message: err.message, stack: err.stack, titles: flattenTitles(test) });
+			};
+		};
+
+		if ( window.addEventListener ) {
+			window.addEventListener( "load", init, false );
+		}
+		else if ( window.attachEvent ) {
+			window.attachEvent( "onload", init );
+		} else if ( window.onLoad ) {
+			window.onload = init;
+		}
+
+	</script>
+  <script>
+  /*
+    $(document).ready(function(){
+
+      $.getJSON("./data/git-traffic-data.json", function(response) {
+        // console.log(data);
+
+        var data = new flatten(response.counts, {
+          cols: {
+            fixed: ['date', 'visits']
+          },
+          rows: {
+            index: 'bucket',
+            cells: 'total',
+            transform: {
+              0: function(value, index){
+                var date = new Date();
+                var minus = new Date(date.setDate(date.getDate()-(16-index)));
+                var formatted = (minus.getUTCMonth()+1) + '/' + (minus.getUTCDate());
+                console.log();
+                return String(formatted);
+              }
+            }
+          },
+          order: {
+            rows: 'date:asc'
+          }
+        });
+
+        $('#total-views').html('Total: ' + response.summary.total);
+        $('#total-unique').html('Unique: ' + response.summary.unique);
+
+        data.table.splice(1,2);
+
+        console.log(data.table);
+
+      });
+    });
+  */
+	</script>
+</head>
+<body>
+  <div id="mocha"></div>
+</body>
+</html>
