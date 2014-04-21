@@ -1,178 +1,197 @@
 // Source: src/dataform.js
 /*!
   * ----------------
-  * HOLY DIVER!
+  * Dataform.js
   * ----------------
   */
 
-// by underscore.js!
-var _each = function(obj, iterator, context) {
-  if (obj == null) return obj;
-  if (Array.prototype.forEach && obj.forEach === Array.prototype.forEach) {
-    obj.forEach(iterator, context);
-  } else if (obj.length === +obj.length) {
-    for (var i = 0, length = obj.length; i < length; i++) {
-      if (iterator.call(context, obj[i], i, obj) === breaker) return;
-    }
-  } else {
-    var keys = _.keys(obj);
-    for (var i = 0, length = keys.length; i < length; i++) {
-      if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker) return;
-    }
-  }
-  return obj;
-};
-
-function flatten(root, setup) {
+function Dataform(root, setup) {
   this.build(root, setup);
 }
 
-flatten.prototype.build = function(root, setup) {
-  var self = this;
+Dataform.prototype.build = function(data, map) {
 
-  self.cols = {
-    label: (setup.cols.label) ? setup.cols.label.split(" -> ") : false,
-    cells: (setup.cols.cells) ? setup.cols.cells.split(" -> ") : false,
-    fixed: (setup.cols.fixed) ? setup.cols.fixed : false
-  };
+  // map.root
+  // map.each.index
+  // map.each.label
+  // map.each.value
 
-  self.rows = {
-    index: setup.rows.index.split(" -> "),
-    cells: setup.rows.cells.split(" -> ")
-  };
-  self.order = {
-    rows: (setup.order && setup.order.rows) ? setup.order.rows.split(":") : false,
-    cols: (setup.order && setup.order.cols) ? setup.order.cols.split(":") : false
-  };
-
-  self.table = [];
-  self.series = [];
-  self.raw = root;
-
-
-  // SORT ROWS
-  // ---------------------
-
-  if (self.order.rows.length > 0) {
-    root.sort(function(a, b){
-      var a_index = parse.apply(self, [a].concat(self.rows.index));
-      var b_index = parse.apply(self, [b].concat(self.rows.index));
-
-      if (self.order.rows[1] == 'asc') {
-        if (a_index > b_index) return 1;
-        if (a_index < b_index) return -1;
-        return 0;
-      } else {
-        if (a_index > b_index) return -1;
-        if (a_index < b_index) return 1;
-        return 0;
-      }
-      console.log("2014-01-19T07:00:00.000Z" > "2014-03-16T07:00:00.000Z");
-      return false;
-      if (a_index > b_index) return 1;
-      if (b_index < a_index) return -1;
-      return 0;
-    })
+  var self = this, _root;
+  // root = data[map.root];
+  if (map.root == "") {
+    _root = [[data]];
+    //console.log('root', _root[0])
+  } else {
+    _root = parse.apply(self, [data].concat(map.root.split(" -> ")));
   }
+  self.root = _root[0],
+  self.map = map,
+  self.table = [],
+  self.series = [],
+  self.raw = data;
 
+  self.cols = (function(){
+    var split_index, split_value, output = { fixed: [] };
 
-  // ADD SERIES
-  // ---------------------
+    split_value = self.map.each.value.split(" -> ");
+    split_index =  (self.map.each.index) ? self.map.each.index.split(" -> ") : self.map.each.value.split(" -> ");
+    output.fixed.push(split_index[split_index.length-1]);
 
-  (function(){
-
-    self.cols.label = (self.cols.fixed) ? self.cols.fixed[0] : 'series';
-    var fixed = (self.cols.fixed) ? self.cols.fixed : [];
-    var cells = (self.cols.cells) ? parse.apply(self, [root[0]].concat(self.cols.cells)) : [];
-
-    /*
-    if (self.cols.fixed) {
-      fixed = self.cols.fixed;
-      self.cols.label = fixed[0];
+    if (self.map.each.label) {
+      output.cells = self.map.each.label.split(" -> ");
+    } else {
+      output.fixed.push(split_value[split_value.length-1])
     }
-    if (self.cols.cells) {
-      cells = parse.apply(self, [root[0]].concat(self.cols.cells));
-    }*/
+    return output;
 
-    //
-    var output = fixed.concat(cells);
-        output.splice(0,1);
-
-    _each(output, function(el, index){
-      self.series.push({ key: el, values: [] });
-    });
-    //console.log(output, self.series);
   })();
 
 
+  self.rows = {
+    index: (self.map.each.index) ? self.map.each.index.split(" -> ") : ['result'],
+    cells: (self.map.each.value) ? self.map.each.value.split(" -> ") : []
+  };
+
+  self.order = (function(){
+    var output = {};
+    if (self.map.sort) {
+      output.rows = self.map.sort.index || 'asc';
+      output.cols = self.map.sort.label || 'desc';
+    }
+    return output;
+  })();
+
+  // SORT ROWS
+  if (self.order.rows.length > 0) {
+    if (self.root instanceof Array) {
+      self.root.sort(function(a, b){
+        var aIndex = parse.apply(self, [a].concat(self.rows.index));
+        var bIndex = parse.apply(self, [b].concat(self.rows.index));
+
+        if (self.order.rows == 'asc') {
+          if (aIndex > bIndex){return 1;}
+          if (aIndex < bIndex){return -1;}
+          return 0;
+        } else {
+          if (aIndex > bIndex){return -1;}
+          if (aIndex < bIndex){return 1;}
+          return 0;
+        }
+
+        return false;
+      });
+    }
+  }
+
+  // ADD SERIES
+  (function(){
+    //var fixed, cells, output;
+    //self.cols.label = (self.cols.fixed.length > 0) ? self.cols.fixed[0] : 'series';
+    if (self.cols.fixed && self.cols.fixed[self.cols.fixed.length-1] == "") {
+      self.cols.label = self.cols.fixed[self.cols.fixed.length-1];
+      fixed = self.cols.fixed;
+      fixed.splice((fixed.length-1),1);
+    } else {
+      self.cols.label = fixed = self.cols.fixed[0];
+      fixed = self.cols.fixed;
+    }
+
+    //var fixed = (self.cols.fixed) ? self.cols.fixed : [];
+    var cells = (self.cols.cells) ? parse.apply(self, [self.root[0]].concat(self.cols.cells)) : [];
+    var output = fixed.concat(cells);
+    if (output.length > 1) {
+      output.splice(0,1);
+    }
+    each(output, function(el, i){
+      self.series.push({ key: el, values: [] });
+    });
+  })();
+
   // ADD SERIES' RECORDS
-  // ---------------------
-
-  _each(root, function(el, i){
-    var index = parse.apply(self, [el].concat(self.rows.index));
-    var cells = parse.apply(self, [el].concat(self.rows.cells));
-
-    _each(cells, function(cell, j){
-      var output = {};
-      output[self.cols.label] = index[0];
-      output['value'] = cell;
-      self.series[j]['values'].push(output);
-    })
-  })
-
-
-  // SORT COLUMNS
-  // ---------------------
-
-  if (self.order.cols.length > 0) {
-    self.series = self.series.sort(function(a, b){
-      var a_total = 0;
-      var b_total = 0;
-      _each(a.values, function(record, index){
-        a_total += record['value'];
-      })
-      _each(b.values, function(record, index){
-        b_total += record['value'];
-      })
-
-      if (self.order.cols[1] == 'asc') {
-        return a_total - b_total;
+  if (self.root instanceof Array || typeof self.root == 'object') {
+    each(self.root, function(el){
+      var index = parse.apply(self, [el].concat(self.rows.index));
+      var cells = parse.apply(self, [el].concat(self.rows.cells));
+      //console.log(index, cells);
+      if (index.length > 1) {
+        each(index, function(key, j){
+          var output = {};
+          output[self.cols.label] = key;
+          output.value = cells[j];
+          self.series[0].values.push(output);
+        });
       } else {
-        return b_total - a_total;
+        each(cells, function(cell, j){
+          var output = {};
+          output[self.cols.label] = index[0];
+          output.value = cell;
+          self.series[j].values.push(output);
+        });
       }
-    })
+    });
+  } else {
+    (function(){
+      var output = {};
+      output[self.cols.label] = 'result';
+      output.value = self.root;
+      self.series[0].values.push(output);
+    })();
   }
 
 
+  // SORT COLUMNS
+  if (self.order.cols.length > 0) {
+    self.series = self.series.sort(function(a, b){
+      var aTotal = 0;
+      var bTotal = 0;
+      each(a.values, function(record){
+        aTotal += record.value;
+      });
+      each(b.values, function(record){
+        bTotal += record.value;
+      });
+
+      if (self.order.cols == 'asc') {
+        return aTotal - bTotal;
+      } else {
+        return bTotal - aTotal;
+      }
+    });
+  }
+
   // BUILD TABLE
-  // ---------------------
-
   self.table = [];
-  self.table.push([self.cols.label]);
 
-  _each(self.series[0].values, function(value, index){
-    self.table.push([value[self.cols.label]]);
-  })
+  //console.log(self.cols.fixed, self.cols.index);
+  //if (self.cols.index) {
+    self.table.push([self.cols.label]);
+    each(self.series[0].values, function(value){
+      self.table.push([value[self.cols.label]]);
+    });
+  /*} else {
+    self.table.push([]);
+    each(self.series[0].values, function(value){
+      self.table.push([]);
+    });
+  }*/
 
-  _each(self.series, function(series, index){
+  each(self.series, function(series){
     self.table[0].push(series.key);
-    _each(series.values, function(record, j){
-      self.table[j+1].push(record['value']);
-    })
-  })
-
+    each(series.values, function(record, j){
+      self.table[j+1].push(record.value);
+    });
+  });
 
   // COLUMN TRANSFORMS
-  // ---------------------
-
+  /*
   if (setup.cols.transform) {
     for (var transform in setup.cols.transform) {
       if (transform == 'all') {
-        _each(self.table[0], function(column, index){
+        each(self.table[0], function(column, index){
           if (index > 0) {
-            self.table[0][index] = setup.cols.transform[transform](self.table[0][index], index);
+            self.table[0][index] = setup.cols.transform[transform](self.table[0][index]);
           }
-        })
+        });
       } else {
         transform = parseInt(transform);
         if (self.table[0].length > transform) {
@@ -180,43 +199,31 @@ flatten.prototype.build = function(root, setup) {
         }
       }
     }
-  }
-
+  }*/
 
   // ROW TRANSFORMS
-  // ---------------------
-
+  /*
   if (setup.rows.transform) {
-    _each(self.table, function(row, index){
+    each(self.table, function(row, index){
       if (index > 0) {
         for (var transform in setup.rows.transform) {
-          self.table[index][transform] = setup.rows.transform[transform](self.table[index][transform], index);
+          self.table[index][transform] = setup.rows.transform[transform](self.table[index][transform]);
         }
       }
-    })
-  }
+    });
+  }*/
 
   return this;
 };
-
-flatten.prototype.render = function(format){
-  if (format == 'csv') {
-    console.log(this.table.join('\n'));
-  }
-  return this;
-};
-
 
 function parse() {
-  var self = this;
   var result = [];
   var loop = function() {
     var root = arguments[0];
     var args = Array.prototype.slice.call(arguments, 1);
     var target = args.pop();
-    //console.log('DIVE ' + target + ':', root, args);
 
-    if (args.length == 0) {
+    if (args.length === 0) {
       if (root instanceof Array) {
         args = root;
       } else if (typeof root === 'object') {
@@ -224,11 +231,18 @@ function parse() {
       }
     }
 
-    _each(args, function(el, index, list){
+    each(args, function(el){
 
-      if (el[target] || el[target] == 0 || el[target] !== void 0) {
+
+      if (target == "" && typeof el == "number") {
+        //console.log(typeof(el), el);
+        return result.push(el);
+      }
+      //
+
+      if (el[target] || el[target] === 0 || el[target] !== void 0) {
         // Easy grab!
-        if (el[target] == null) {
+        if (el[target] === null) {
           return result.push('');
         } else {
           return result.push(el[target]);
@@ -238,7 +252,7 @@ function parse() {
         if (root[el] instanceof Array) {
           // dive through each array item
 
-          _each(root[el], function(n, i) {
+          each(root[el], function(n, i) {
             var splinter = [root[el]].concat(root[el][i]).concat(args.slice(1)).concat(target);
             return loop.apply(this, splinter);
           });
@@ -267,6 +281,42 @@ function parse() {
     if (result.length > 0) {
       return result;
     }
-  }
+  };
   return loop.apply(this, arguments);
+}
+
+
+// via: https://github.com/spocke/punymce
+function is(o, t){
+  o = typeof(o);
+  if (!t){
+    return o != 'undefined';
+  }
+  return o == t;
+}
+
+function each(o, cb, s){
+  var n;
+  if (!o){
+    return 0;
+  }
+  s = !s ? o : s;
+  if (is(o.length)){
+    // Indexed arrays, needed for Safari
+    for (n=0; n<o.length; n++) {
+      if (cb.call(s, o[n], n, o) === false){
+        return 0;
+      }
+    }
+  } else {
+    // Hashtables
+    for (n in o){
+      if (o.hasOwnProperty(n)) {
+        if (cb.call(s, o[n], n, o) === false){
+          return 0;
+        }
+      }
+    }
+  }
+  return 1;
 }

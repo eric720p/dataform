@@ -56,47 +56,6 @@
 		} else if ( window.onLoad ) {
 			window.onload = init;
 		}
-
-	</script>
-  <script>
-  /*
-    $(document).ready(function(){
-
-      $.getJSON("./data/git-traffic-data.json", function(response) {
-        // console.log(data);
-
-        var data = new flatten(response.counts, {
-          cols: {
-            fixed: ['date', 'visits']
-          },
-          rows: {
-            index: 'bucket',
-            cells: 'total',
-            transform: {
-              0: function(value, index){
-                var date = new Date();
-                var minus = new Date(date.setDate(date.getDate()-(16-index)));
-                var formatted = (minus.getUTCMonth()+1) + '/' + (minus.getUTCDate());
-                console.log();
-                return String(formatted);
-              }
-            }
-          },
-          order: {
-            rows: 'date:asc'
-          }
-        });
-
-        $('#total-views').html('Total: ' + response.summary.total);
-        $('#total-unique').html('Unique: ' + response.summary.unique);
-
-        data.table.splice(1,2);
-
-        console.log(data.table);
-
-      });
-    });
-  */
 	</script>
 </head>
 <body>
