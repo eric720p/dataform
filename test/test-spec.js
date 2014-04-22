@@ -20,7 +20,7 @@ describe("dataform", function() {
             rows: 'date:asc'
           }
         });
-        // console.log(dataform);
+        console.log(dataform);
         expect(dataform).to.have.property('table');
         expect(dataform.table).to.be.of.length(17);
         expect(dataform.table[0]).to.be.of.length(2);

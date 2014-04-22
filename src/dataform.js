@@ -4,29 +4,57 @@
   * ----------------
   */
 
-function Dataform(root, setup) {
-  this.build(root, setup);
+function Dataform(raw, setup) {
+  this.build(raw, setup);
+  this.raw = raw;
 }
 
-Dataform.prototype.build = function(data, map) {
+Dataform.prototype.build = function(data, schema) {
+  var self = this, map = schema, _root;
+
+  if (schema && is(schema.root, 'string') == false) {
+    throw new Error('schema.root must be a string!');
+  }
+
+  var options = extend({
+    root: "",
+    each: {
+      index: false,
+      value: false,
+      label: false
+    }
+  }, schema);
+
+  self.root = (function(){
+    var root;
+    if (options.root == "") {
+      root = [[data]];
+    } else {
+      root = parse.apply(self, [data].concat(options.root.split(" -> ")));
+    }
+    return root[0];
+  })();
+
+  //_root = (options.root == "") ? [[data]] : parse.apply(self, [data].concat(options.root.split(" -> ")));
+
   // map.root
   // map.each.index
   // map.each.label
   // map.each.value
 
-  var self = this, _root;
   // root = data[map.root];
+  /*
   if (map.root == "") {
     _root = [[data]];
     //console.log('root', _root[0])
   } else {
     _root = parse.apply(self, [data].concat(map.root.split(" -> ")));
-  }
-  self.root = _root[0],
+  }*/
+  //self.root = _root[0],
   self.map = map,
   self.table = [],
   self.series = [],
-  self.raw = data;
+  //self.raw = data;
 
   self.cols = (function(){
     var split_index, split_value, output = { fixed: [] };
@@ -316,4 +344,16 @@ function each(o, cb, s){
     }
   }
   return 1;
+}
+
+// Adapter to exclude null values
+function extend(o, e){
+  each(e, function(v, n){
+    if (is(o[n], 'object') && is(v, 'object')){
+      o[n] = extend(o[n], v);
+    } else if (v !== null) {
+      o[n] = v;
+    }
+  });
+  return o;
 }
