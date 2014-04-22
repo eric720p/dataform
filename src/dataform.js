@@ -9,7 +9,6 @@ function Dataform(root, setup) {
 }
 
 Dataform.prototype.build = function(data, map) {
-
   // map.root
   // map.each.index
   // map.each.label
@@ -283,7 +282,6 @@ function parse() {
   };
   return loop.apply(this, arguments);
 }
-
 
 // via: https://github.com/spocke/punymce
 function is(o, t){

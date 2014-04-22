@@ -10,7 +10,6 @@ function Dataform(root, setup) {
 }
 
 Dataform.prototype.build = function(data, map) {
-
   // map.root
   // map.each.index
   // map.each.label
@@ -285,7 +284,6 @@ function parse() {
   return loop.apply(this, arguments);
 }
 
-
 // via: https://github.com/spocke/punymce
 function is(o, t){
   o = typeof(o);
@@ -320,3 +318,44 @@ function each(o, cb, s){
   }
   return 1;
 }
+
+// Source: src/lib/average.js
+Dataform.prototype.average = function(){
+  return [5];
+};
+
+// Source: src/lib/count.js
+Dataform.prototype.count = function(){
+  return [10];
+};
+
+// Source: src/lib/maximum.js
+Dataform.prototype.maximum = function(){
+  //if (this.table) {}
+  // return Math.max for index/all
+  // return [1,2,3,4,5];
+  return [9];
+};
+
+// Source: src/lib/median.js
+Dataform.prototype.median = function(){
+  return [4.3];
+};
+
+// Source: src/lib/minimum.js
+Dataform.prototype.minimum = function(){
+  //if (this.table) {}
+  // return Math.min for index/all
+  // return [1,2,3,4,5];
+  return [0];
+};
+
+// Source: src/lib/mode.js
+Dataform.prototype.mode = function(){
+  return [3];
+};
+
+// Source: src/lib/sum.js
+Dataform.prototype.sum = function(){
+  return [23];
+};
