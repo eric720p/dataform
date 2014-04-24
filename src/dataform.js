@@ -10,7 +10,7 @@ function Dataform(raw, setup) {
 }
 
 Dataform.prototype.build = function(data, schema) {
-  var self = this, map = schema, _root;
+  var self = this, map = schema;
 
   if (schema && is(schema.root, 'string') == false) {
     throw new Error('schema.root must be a string!');
@@ -34,7 +34,6 @@ Dataform.prototype.build = function(data, schema) {
     }
     return root[0];
   })();
-
   //_root = (options.root == "") ? [[data]] : parse.apply(self, [data].concat(options.root.split(" -> ")));
 
   // map.root
