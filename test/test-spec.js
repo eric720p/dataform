@@ -10,6 +10,17 @@ describe("dataform", function() {
 
     it("Should have 2 columns, 1 header row, and 16 data rows (2x17)", function(done){
       $.getJSON("./data/git-traffic-data.json", function(response) {
+
+        /*var data = new Dataform(response, {
+          root: "counts",
+          each: {
+            index: "bucket",
+            values: [{
+              target: "total"
+            }]
+          }
+        });*/
+
         var dataform = new Dataform(response, {
           root: "counts",
           each: {
@@ -20,6 +31,16 @@ describe("dataform", function() {
             rows: 'date:asc'
           }
         });
+        /*var dataform = new Dataform(response, {
+          root: "counts",
+          each: {
+            index: "bucket",
+            values: "total"
+          },
+          sort: {
+            index: 'asc'
+          }
+        });*/
         console.log(dataform);
         expect(dataform).to.have.property('table');
         expect(dataform.table).to.be.of.length(17);

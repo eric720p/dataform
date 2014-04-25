@@ -4,52 +4,119 @@
   * ----------------
   */
 
-function Dataform(raw, setup) {
-  this.build(raw, setup);
-  this.raw = raw;
+function Dataform(raw, schema) {
+  this.build(raw, schema);
 }
 
 Dataform.prototype.build = function(data, schema) {
   var self = this, map = schema;
+  var test = {};
 
-  if (schema && is(schema.root, 'string') == false) {
-    throw new Error('schema.root must be a string!');
+  self.raw = data;
+  self.schema = schema;
+  // schema.root
+  // schema.each.index
+  // schema.each.labels
+  // schema.each.values
+
+  test.schema = schema;
+  test.table = [[]],
+  test.series = [];
+
+  if (self.schema && is(self.schema.root, 'string') == false) {
+    throw new Error('schema.root must be a string');
   }
 
+  // Build options hash
   var options = extend({
     root: "",
     each: {
       index: false,
-      value: false,
-      label: false
+      values: false,
+      labels: false
     }
-  }, schema);
+  }, self.schema);
 
-  self.root = (function(){
+  // Convert string targets to a hash w/ matching target
+  each(options.each, function(value, key, object){
+    if (value && is(value, 'string')) {
+      options.each[key] = { target: options.each[key] };
+    }
+  });
+
+  // Prepare root for parsing
+  var root = self.root = (function(){
     var root;
     if (options.root == "") {
-      root = [[data]];
+      root = [[self.raw]];
     } else {
-      root = parse.apply(self, [data].concat(options.root.split(" -> ")));
+      root = parse.apply(self, [self.raw].concat(options.root.split(" -> ")));
     }
     return root[0];
   })();
-  //_root = (options.root == "") ? [[data]] : parse.apply(self, [data].concat(options.root.split(" -> ")));
 
-  // map.root
-  // map.each.index
-  // map.each.label
-  // map.each.value
 
-  // root = data[map.root];
-  /*
-  if (map.root == "") {
-    _root = [[data]];
-    //console.log('root', _root[0])
+  each(root, function(){
+
+    // Prefill data structures
+    test.table.push([]);
+    // test.series.push({ label: undefined, values: [] });
+
+  });
+
+  // Retrieve indices
+  if (options.each.index) {
+    (function(){
+      var index_trail = options.each.index.target.split(" -> ");
+      var indices = parse.apply(self, [root].concat(index_trail));
+      test.table[0].push(index_trail[index_trail.length-1]);
+      each(indices, function(index, i){
+        test.table[i+1].push(index);
+        // test.series[i].values.push({ index: index, value: undefined });
+      });
+      console.log(index_trail, indices);
+    })();
+  }
+
+  // Retrieve labels
+  if (options.each.label) {
+    // Dynamic
+    (function(){
+      var label_trail = options.each.label.target.split(" -> ");
+      var labels = parse.apply(self, [root].concat(label_trail));
+      each(labels, function(label, i){
+        test.table[0].push(label);
+      });
+      console.log(label_trail, labels);
+    })();
   } else {
-    _root = parse.apply(self, [data].concat(map.root.split(" -> ")));
-  }*/
-  //self.root = _root[0],
+    // Static
+    (function(){
+      var value_key = options.each.value.target.split(" -> ");
+      var label = value_key[value_key.length-1];
+      test.table[0].push(label);
+    })();
+  }
+
+  // Retrieve index
+  //console.log(options.each.index);
+
+  // Retrieve values
+  if (options.each.values instanceof Array) {
+    console.log("Known column bounds", options.each.values);
+  } else {
+    console.log("Open column bounds", options.each.values);
+  }
+
+  console.log('options', options);
+  console.log('dataset', test);
+
+  //return false;
+
+  // ------------------------------
+  // ------------------------------
+  // ------------------------------
+
   self.map = map,
   self.table = [],
   self.series = [],
