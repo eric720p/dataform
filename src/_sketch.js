@@ -1,68 +1,107 @@
 // v2: enhance!
+// ------------------
+
+// explicit structure
+// - one row per collection item
+// - one row cell per config {object}
+// - one header cell per config.label
+reduce: [
+  {},{},{}
+],
+sort: {
+  2: 'asc'
+}
+
+// implicit structure
+// - one row per index (first cell)
+// - one row cell per value
+// - one header cell per label
+select: {
+  index: {},
+  value: {},
+  label: {}
+},
+sort: {
+  index: 'asc',
+  value: 'desc'
+}
+
+// ------------------
 
 // keen2.json
 schema: {
-  root: 'result',
-  each: {
+  collection: 'result',
+  select: {
     index: 'timeframe -> start',
-    values: 'value -> result',
-    labels: 'value -> parsed_user_agent.os.family'
+    value: 'value -> result',
+    label: 'value -> parsed_user_agent.os.family'
   }
 }
 
 // git-traffic-data.json
 schema: {
-  root: 'counts',
-  each: {
+  collection: 'counts',
+  select: {
     index: 'bucket',
-    values: 'total'
+    value: 'total'
   }
 }
 
 // twitter.json
 schema: {
-  root: '',
-  each: {
+  collection: '',
+  select: {
     index: {
       target: 'created_at',
       type: 'date',
       format: 'MMM DD',
       method: 'Twitter.DateFixer'
     },
-    values: {
+    value: {
       target: 'text',
       type: 'string'
     },
-    labels: {
+    label: {
       target: 'user -> screen_name',
       type: 'string',
       prefix: '@'
     }
+  },
+  sort: {
+    index: 'asc',
+    value: 'desc'
   }
 }
 
 // keen extraction
 schema: {
-  root: 'result',
-  each: {
-    index: 'keen -> timestamp',
-    values: [
-      {
-        target: 'visitor -> tech -> browser',
-        label: 'Browser',
-        type: 'string'
-      }
-    ]
-  },
+  collection: 'result',
+  reduce: [
+    {
+      target: 'keen -> timestamp',
+      type: 'date',
+      label: 'Time',
+      format: 'MMM DD, YYYY'
+    },
+    {
+      target: 'visitor -> tech -> browser',
+      type: 'string',
+      label: 'Browser'
+    },
+    {
+      target: 'visitor -> geo -> country',
+      type: 'string',
+      label: 'Origin'
+    }
+  ],
   sort: {
     index: 'asc'
   }
 }
 
-
 // "index" is processed into a single first cell per row (0,0 cell given)
-// "values" is processed into a complete row with one cell per value
-// "labels" is processed into a complete header with one cell per label
+// "value" is processed into a complete row with one cell per value
+// "label" is processed into a complete header with one cell per label
 
 
 
@@ -268,7 +307,27 @@ schema: {
 // ------------------
 
 schema: {
-  root: 'result',
+  collection: 'result',
+
+  // pick
+  // trim
+  // pluck
+
+  // explicit
+  // - one row per record
+  reduce: [
+    {},{},{} // each designates a label
+  ],
+
+  // implicit
+  // - one row per index
+  // - one cell per record
+  select: {
+    index: {},
+    value: {},
+    label: {}
+  },
+
   each: {
 
     index: {
@@ -276,8 +335,6 @@ schema: {
       type: 'date',
       format: 'MMM-DD' // moment.js
     },
-
-    // values: {}, // single object, will expand
 
     values: [
       {

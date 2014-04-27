@@ -5,27 +5,408 @@
   */
 
 function Dataform(raw, schema) {
-  this.build(raw, schema);
+  this.configure(raw, schema);
+  /*if (schema.collection) {
+    this.configure(raw, schema);
+  } else {
+    this.build(raw, schema);
+  }*/
 }
+
+Dataform.prototype.configure = function(raw, schema){
+  var self = this, options;
+
+  self.raw = self.raw || raw;
+  self.schema = self.schema || schema || {};
+
+  self.table = [];
+  //self.series = [];
+
+  if (self.schema.collection && is(self.schema.collection, 'string') == false) {
+    throw new Error('schema.collection must be a string');
+  }
+
+  if (self.schema.select && self.schema.reduce) {
+    throw new Error('schema.select and schema.reduce cannot be used together');
+  }
+
+  if (self.schema.select) {
+    options = extend({
+      collection: "",
+      select: {
+        index: false,
+        value: false,
+        label: false
+      },
+      sort: {
+        index: 'asc',
+        value: 'desc'
+      }
+    }, self.schema);
+    options = _optHash(options);
+    _selection.call(this, options);
+  }
+
+  if (self.schema.reduce) {
+    options = extend({
+      collection: "",
+      reduce: true
+    }, self.schema);
+    options = _optHash(options);
+    _reduction.call(this, options);
+  }
+
+  return this;
+};
+
+// Convert string targets to
+// a hash w/ matching target
+// --------------------------
+function _optHash(options){
+  each(options.select, function(value, key, object){
+    if (value && is(value, 'string')) {
+      options.select[key] = { target: options.select[key] };
+    }
+  });
+  return options;
+}
+
+function _reduction(options){
+  console.log('Reduction', options);
+  return this;
+}
+
+
+function _selection(options){
+  // console.log('Selection', options);
+  var self = this;
+
+  var value_set = (options.select.value) ? options.select.value.target.split(" -> ") : false,
+      label_set = (options.select.label) ? options.select.label.target.split(" -> ") : false,
+      index_set = (options.select.index) ? options.select.index.target.split(" -> ") : false;
+
+  var sort_index = (options.sort.index) ? options.sort.index : 'asc',
+      sort_value = (options.sort.index) ? options.sort.index : 'desc';
+
+  // Prepare root for parsing
+  var root = (function(){
+    var root;
+    if (options.collection == "") {
+      root = [self.raw];
+    } else {
+      root = parse.apply(self, [self.raw].concat(options.collection.split(" -> ")));
+    }
+    return root[0];
+  })();
+
+
+  // Sort records by index
+  if (root instanceof Array) {
+    root.sort(function(a, b){
+      var sort_a_by, sort_b_by, sort_set, sort_dir;
+
+      // Configure sort options
+      if (index_set) {
+        sort_set = index_set;
+        sort_dir = options.sort.index;
+      } else if (label_set) {
+        sort_set = label_set;
+        sort_dir = options.sort.label;
+      }
+
+      // Retrieve target properties
+      sort_a_by = parse.apply(self, [a].concat(sort_set));
+      sort_b_by = parse.apply(self, [b].concat(sort_set));
+
+      // Return sort order
+      if (sort_dir == 'asc') {
+        if (sort_a_by > sort_b_by) {
+          return 1;
+        } else {
+          return -1
+        }
+      } else {
+        if (sort_a_by > sort_b_by) {
+          return -1;
+        } else {
+          return 1
+        }
+      }
+      return false;
+    });
+  }
+
+
+  // Inject header row
+  self.table.push([]);
+
+  // Inject data rows
+  each(root, function(){
+    self.table.push([]);
+    // test.series.push({ label: undefined, values: [] });
+  });
+
+
+
+  // Parse each record
+  each(root, function(record, interval){
+
+    var plucked_value = (value_set) ? parse.apply(self, [record].concat(value_set)) : false,
+        plucked_label = (label_set) ? parse.apply(self, [record].concat(label_set)) : false,
+        plucked_index = (index_set) ? parse.apply(self, [record].concat(index_set)) : false;
+
+    //console.log(plucked_value, plucked_label, plucked_index);
+
+    // Build index column
+    if (plucked_index) {
+
+      // Build index/label on first interval
+      if (interval == 0) {
+
+        // Push last index property to 0,0
+        self.table[0].push(index_set[index_set.length-1]);
+
+        // Build subsequent series headers (1:N)
+        if (plucked_label) {
+          each(plucked_label, function(value, i){
+            self.table[0].push(value);
+          });
+        } else {
+          self.table[0].push(value_set[value_set.length-1]);
+        }
+      }
+
+      self.table[interval+1].push(plucked_index[0]);
+    }
+
+    // Build label column
+    if (!plucked_index && plucked_label) {
+      self.table[0].push(label_set[label_set.length-1]);
+      self.table[0].push(value_set[value_set.length-1]);
+      each(plucked_label, function(value, i){
+        if (i > 0) {
+          self.table[i].push(value);
+        }
+      });
+    }
+
+    if (!plucked_index && !plucked_label) {
+      // [REVISIT]
+      self.table[0].push('');
+    }
+
+
+    // Append values
+    if (plucked_value) {
+      each(plucked_value, function(value, i){
+        self.table[interval+1].push(value);
+      });
+    }
+
+  });
+
+  // ------------------------------
+  // ------------------------------
+  // ------------------------------
+
+  //self.map = this.schema;
+  //self.table = [],
+  //self.series = [],
+  //self.raw = data;
+
+  /*
+  self.cols = (function(){
+    var split_index, split_value, output = { fixed: [] };
+
+    split_value = self.schema.select.value.target.split(" -> ");
+    split_index = (self.schema.select.index.target) ? self.schema.select.index.target.split(" -> ") : self.schema.select.value.target.split(" -> ");
+    output.fixed.push(split_index[split_index.length-1]);
+
+    if (self.schema.select.label.target) {
+      output.cells = self.schema.select.label.target.split(" -> ");
+    } else {
+      output.fixed.push(split_value[split_value.length-1])
+    }
+    return output;
+
+  })();
+
+
+  self.rows = {
+    index: (self.schema.select.index.target) ? self.schema.select.index.target.split(" -> ") : ['result'],
+    cells: (self.schema.select.value.target) ? self.schema.select.value.target.split(" -> ") : []
+  };
+
+  self.order = (function(){
+    var output = {};
+    if (self.schema.sort) {
+      output.rows = self.schema.sort.index || 'asc';
+      output.cols = self.schema.sort.label || 'desc';
+    }
+    return output;
+  })();
+
+  // SORT ROWS
+  if (self.order.rows.length > 0) {
+    if (self.root instanceof Array) {
+      self.root.sort(function(a, b){
+        var aIndex = parse.apply(self, [a].concat(self.rows.index));
+        var bIndex = parse.apply(self, [b].concat(self.rows.index));
+
+        if (self.order.rows == 'asc') {
+          if (aIndex > bIndex){return 1;}
+          if (aIndex < bIndex){return -1;}
+          return 0;
+        } else {
+          if (aIndex > bIndex){return -1;}
+          if (aIndex < bIndex){return 1;}
+          return 0;
+        }
+
+        return false;
+      });
+    }
+  }
+
+  // ADD SERIES
+  (function(){
+    //var fixed, cells, output;
+    //self.cols.label = (self.cols.fixed.length > 0) ? self.cols.fixed[0] : 'series';
+    if (self.cols.fixed && self.cols.fixed[self.cols.fixed.length-1] == "") {
+      self.cols.label = self.cols.fixed[self.cols.fixed.length-1];
+      fixed = self.cols.fixed;
+      fixed.splice((fixed.length-1),1);
+    } else {
+      self.cols.label = fixed = self.cols.fixed[0];
+      fixed = self.cols.fixed;
+    }
+
+    //var fixed = (self.cols.fixed) ? self.cols.fixed : [];
+    var cells = (self.cols.cells) ? parse.apply(self, [self.root[0]].concat(self.cols.cells)) : [];
+    var output = fixed.concat(cells);
+    if (output.length > 1) {
+      output.splice(0,1);
+    }
+    each(output, function(el, i){
+      self.series.push({ key: el, values: [] });
+    });
+  })();
+
+  // ADD SERIES' RECORDS
+  if (self.root instanceof Array || typeof self.root == 'object') {
+    each(self.root, function(el){
+      var index = parse.apply(self, [el].concat(self.rows.index));
+      var cells = parse.apply(self, [el].concat(self.rows.cells));
+      //console.log(index, cells);
+      if (index.length > 1) {
+        each(index, function(key, j){
+          var output = {};
+          output[self.cols.label] = key;
+          output.value = cells[j];
+          self.series[0].values.push(output);
+        });
+      } else {
+        each(cells, function(cell, j){
+          var output = {};
+          output[self.cols.label] = index[0];
+          output.value = cell;
+          self.series[j].values.push(output);
+        });
+      }
+    });
+  } else {
+    (function(){
+      var output = {};
+      output[self.cols.label] = 'result';
+      output.value = self.root;
+      self.series[0].values.push(output);
+    })();
+  }
+
+
+  // SORT COLUMNS
+  if (self.order.cols.length > 0) {
+    self.series = self.series.sort(function(a, b){
+      var aTotal = 0;
+      var bTotal = 0;
+      each(a.values, function(record){
+        aTotal += record.value;
+      });
+      each(b.values, function(record){
+        bTotal += record.value;
+      });
+
+      if (self.order.cols == 'asc') {
+        return aTotal - bTotal;
+      } else {
+        return bTotal - aTotal;
+      }
+    });
+  }
+
+  // BUILD TABLE
+  //self.table = [];
+
+  //console.log(self.cols.fixed, self.cols.index);
+  //if (self.cols.index) {
+    self.table.push([self.cols.label]);
+    each(self.series[0].values, function(value){
+      self.table.push([value[self.cols.label]]);
+    });
+  /*} else {
+    self.table.push([]);
+    each(self.series[0].values, function(value){
+      self.table.push([]);
+    });
+  }*/
+
+  /*each(self.series, function(series){
+    self.table[0].push(series.key);
+    each(series.values, function(record, j){
+      self.table[j+1].push(record.value);
+    });
+  });*/
+
+  // COLUMN TRANSFORMS
+  /*
+  if (setup.cols.transform) {
+    for (var transform in setup.cols.transform) {
+      if (transform == 'all') {
+        each(self.table[0], function(column, index){
+          if (index > 0) {
+            self.table[0][index] = setup.cols.transform[transform](self.table[0][index]);
+          }
+        });
+      } else {
+        transform = parseInt(transform);
+        if (self.table[0].length > transform) {
+          self.table[0][transform] = setup.cols.transform[transform](self.table[0][transform]);
+        }
+      }
+    }
+  }*/
+
+  // ROW TRANSFORMS
+  /*
+  if (setup.rows.transform) {
+    each(self.table, function(row, index){
+      if (index > 0) {
+        for (var transform in setup.rows.transform) {
+          self.table[index][transform] = setup.rows.transform[transform](self.table[index][transform]);
+        }
+      }
+    });
+  }*/
+
+  return this;
+}
+
 
 Dataform.prototype.build = function(data, schema) {
   var self = this, map = schema;
-  var test = {};
 
-  self.raw = data;
+  self.raw = data,
   self.schema = schema;
-  // schema.root
-  // schema.each.index
-  // schema.each.labels
-  // schema.each.values
-
-  test.schema = schema;
-  test.table = [[]],
-  test.series = [];
-
-  if (self.schema && is(self.schema.root, 'string') == false) {
-    throw new Error('schema.root must be a string');
-  }
 
   // Build options hash
   var options = extend({
@@ -36,13 +417,6 @@ Dataform.prototype.build = function(data, schema) {
       labels: false
     }
   }, self.schema);
-
-  // Convert string targets to a hash w/ matching target
-  each(options.each, function(value, key, object){
-    if (value && is(value, 'string')) {
-      options.each[key] = { target: options.each[key] };
-    }
-  });
 
   // Prepare root for parsing
   var root = self.root = (function(){
@@ -55,19 +429,17 @@ Dataform.prototype.build = function(data, schema) {
     return root[0];
   })();
 
-
+  /*
   each(root, function(){
-
     // Prefill data structures
     test.table.push([]);
     // test.series.push({ label: undefined, values: [] });
-
   });
 
   // Retrieve indices
-  if (options.each.index) {
+  if (options.select && options.select.index) {
     (function(){
-      var index_trail = options.each.index.target.split(" -> ");
+      var index_trail = options.select.index.target.split(" -> ");
       var indices = parse.apply(self, [root].concat(index_trail));
       test.table[0].push(index_trail[index_trail.length-1]);
       each(indices, function(index, i){
@@ -79,10 +451,10 @@ Dataform.prototype.build = function(data, schema) {
   }
 
   // Retrieve labels
-  if (options.each.label) {
+  if (options.select && options.select.label) {
     // Dynamic
     (function(){
-      var label_trail = options.each.label.target.split(" -> ");
+      var label_trail = options.select.label.target.split(" -> ");
       var labels = parse.apply(self, [root].concat(label_trail));
       each(labels, function(label, i){
         test.table[0].push(label);
@@ -92,26 +464,11 @@ Dataform.prototype.build = function(data, schema) {
   } else {
     // Static
     (function(){
-      var value_key = options.each.value.target.split(" -> ");
+      var value_key = (options.select) ? options.select.value.target.split(" -> ") : [];
       var label = value_key[value_key.length-1];
       test.table[0].push(label);
     })();
-  }
-
-  // Retrieve index
-  //console.log(options.each.index);
-
-  // Retrieve values
-  if (options.each.values instanceof Array) {
-    console.log("Known column bounds", options.each.values);
-  } else {
-    console.log("Open column bounds", options.each.values);
-  }
-
-  console.log('options', options);
-  console.log('dataset', test);
-
-  //return false;
+  }*/
 
   // ------------------------------
   // ------------------------------
