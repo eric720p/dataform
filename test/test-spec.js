@@ -30,6 +30,24 @@ describe("dataform", function() {
       });
     });
 
+    it("keen_groupby.json (pie!)", function(done){
+      $.getJSON("./data/keen_groupby.json", function(response) {
+        var dataform = new Dataform(response, {
+          collection: "result",
+          select: {
+            value: "result",
+            label: "page"
+          },
+          sort: {
+            index: 'asc'
+          }
+        });
+        console.log('keen_groupby.json', dataform);
+        expect(dataform).to.have.property('table');
+        done();
+      });
+    });
+
     it("keen2.json", function(done){
       $.getJSON("./data/keen2.json", function(response) {
         var dataform = new Dataform(response, {

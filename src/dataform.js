@@ -6,11 +6,6 @@
 
 function Dataform(raw, schema) {
   this.configure(raw, schema);
-  /*if (schema.collection) {
-    this.configure(raw, schema);
-  } else {
-    this.build(raw, schema);
-  }*/
 }
 
 Dataform.prototype.configure = function(raw, schema){
@@ -20,7 +15,6 @@ Dataform.prototype.configure = function(raw, schema){
   self.schema = self.schema || schema || {};
 
   self.table = [];
-  //self.series = [];
 
   if (self.schema.collection && is(self.schema.collection, 'string') == false) {
     throw new Error('schema.collection must be a string');
@@ -79,7 +73,8 @@ function _reduction(options){
 
 function _selection(options){
   // console.log('Selection', options);
-  var self = this;
+  var self = this,
+      series = [];
 
   var value_set = (options.select.value) ? options.select.value.target.split(" -> ") : false,
       label_set = (options.select.label) ? options.select.label.target.split(" -> ") : false,
@@ -154,7 +149,6 @@ function _selection(options){
     var plucked_value = (value_set) ? parse.apply(self, [record].concat(value_set)) : false,
         plucked_label = (label_set) ? parse.apply(self, [record].concat(label_set)) : false,
         plucked_index = (index_set) ? parse.apply(self, [record].concat(index_set)) : false;
-
     //console.log(plucked_value, plucked_label, plucked_index);
 
     // Build index column
@@ -170,6 +164,8 @@ function _selection(options){
         if (plucked_label) {
           each(plucked_label, function(value, i){
             self.table[0].push(value);
+            // Build series for later sorting
+            //series.push({ label: value, values: [] });
           });
         } else {
           self.table[0].push(value_set[value_set.length-1]);
@@ -179,15 +175,23 @@ function _selection(options){
       self.table[interval+1].push(plucked_index[0]);
     }
 
+    if (plucked_label) {
+      each(plucked_label, function(value, i){
+        // Build series for later sorting
+        //series.push({ label: value, values: [] });
+      });
+    }
+
     // Build label column
     if (!plucked_index && plucked_label) {
-      self.table[0].push(label_set[label_set.length-1]);
-      self.table[0].push(value_set[value_set.length-1]);
-      each(plucked_label, function(value, i){
-        if (i > 0) {
-          self.table[i].push(value);
-        }
-      });
+      if (interval == 0) {
+        self.table[0].push(label_set[label_set.length-1]);
+        self.table[0].push(value_set[value_set.length-1]);
+      }
+      self.table[interval+1].push(plucked_label[0]);
+
+      // Build series for later sorting
+      //series.push({ label: plucked_label[0], values: [] });
     }
 
     if (!plucked_index && !plucked_label) {
@@ -199,11 +203,20 @@ function _selection(options){
     // Append values
     if (plucked_value) {
       each(plucked_value, function(value, i){
+
+        // Match values to correct series
+
+        console.log(plucked_value.length, series.length);
         self.table[interval+1].push(value);
+
+        // Append values to series
+        //series[i].values.push(value);
       });
     }
 
   });
+
+  console.log(series);
 
   // ------------------------------
   // ------------------------------
