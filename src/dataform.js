@@ -4,216 +4,212 @@
   * ----------------
   */
 
-function Dataform(root, setup) {
-  this.build(root, setup);
+function Dataform(raw, schema) {
+  this.configure(raw, schema);
 }
 
-Dataform.prototype.build = function(data, map) {
+Dataform.prototype.configure = function(raw, schema){
+  var self = this, options;
 
-  // map.root
-  // map.each.index
-  // map.each.label
-  // map.each.value
+  self.raw = self.raw || raw,
+  self.schema = self.schema || schema || {},
+  self.table = [[]];
 
-  var self = this, _root;
-  // root = data[map.root];
-  if (map.root == "") {
-    _root = [[data]];
-    //console.log('root', _root[0])
-  } else {
-    _root = parse.apply(self, [data].concat(map.root.split(" -> ")));
-  }
-  self.root = _root[0],
-  self.map = map,
-  self.table = [],
-  self.series = [],
-  self.raw = data;
-
-  self.cols = (function(){
-    var split_index, split_value, output = { fixed: [] };
-
-    split_value = self.map.each.value.split(" -> ");
-    split_index =  (self.map.each.index) ? self.map.each.index.split(" -> ") : self.map.each.value.split(" -> ");
-    output.fixed.push(split_index[split_index.length-1]);
-
-    if (self.map.each.label) {
-      output.cells = self.map.each.label.split(" -> ");
-    } else {
-      output.fixed.push(split_value[split_value.length-1])
-    }
-    return output;
-
-  })();
-
-
-  self.rows = {
-    index: (self.map.each.index) ? self.map.each.index.split(" -> ") : ['result'],
-    cells: (self.map.each.value) ? self.map.each.value.split(" -> ") : []
-  };
-
-  self.order = (function(){
-    var output = {};
-    if (self.map.sort) {
-      output.rows = self.map.sort.index || 'asc';
-      output.cols = self.map.sort.label || 'desc';
-    }
-    return output;
-  })();
-
-  // SORT ROWS
-  if (self.order.rows.length > 0) {
-    if (self.root instanceof Array) {
-      self.root.sort(function(a, b){
-        var aIndex = parse.apply(self, [a].concat(self.rows.index));
-        var bIndex = parse.apply(self, [b].concat(self.rows.index));
-
-        if (self.order.rows == 'asc') {
-          if (aIndex > bIndex){return 1;}
-          if (aIndex < bIndex){return -1;}
-          return 0;
-        } else {
-          if (aIndex > bIndex){return -1;}
-          if (aIndex < bIndex){return 1;}
-          return 0;
-        }
-
-        return false;
-      });
-    }
+  if (self.schema.collection && is(self.schema.collection, 'string') == false) {
+    throw new Error('schema.collection must be a string');
   }
 
-  // ADD SERIES
-  (function(){
-    //var fixed, cells, output;
-    //self.cols.label = (self.cols.fixed.length > 0) ? self.cols.fixed[0] : 'series';
-    if (self.cols.fixed && self.cols.fixed[self.cols.fixed.length-1] == "") {
-      self.cols.label = self.cols.fixed[self.cols.fixed.length-1];
-      fixed = self.cols.fixed;
-      fixed.splice((fixed.length-1),1);
-    } else {
-      self.cols.label = fixed = self.cols.fixed[0];
-      fixed = self.cols.fixed;
-    }
-
-    //var fixed = (self.cols.fixed) ? self.cols.fixed : [];
-    var cells = (self.cols.cells) ? parse.apply(self, [self.root[0]].concat(self.cols.cells)) : [];
-    var output = fixed.concat(cells);
-    if (output.length > 1) {
-      output.splice(0,1);
-    }
-    each(output, function(el, i){
-      self.series.push({ key: el, values: [] });
-    });
-  })();
-
-  // ADD SERIES' RECORDS
-  if (self.root instanceof Array || typeof self.root == 'object') {
-    each(self.root, function(el){
-      var index = parse.apply(self, [el].concat(self.rows.index));
-      var cells = parse.apply(self, [el].concat(self.rows.cells));
-      //console.log(index, cells);
-      if (index.length > 1) {
-        each(index, function(key, j){
-          var output = {};
-          output[self.cols.label] = key;
-          output.value = cells[j];
-          self.series[0].values.push(output);
-        });
-      } else {
-        each(cells, function(cell, j){
-          var output = {};
-          output[self.cols.label] = index[0];
-          output.value = cell;
-          self.series[j].values.push(output);
-        });
-      }
-    });
-  } else {
-    (function(){
-      var output = {};
-      output[self.cols.label] = 'result';
-      output.value = self.root;
-      self.series[0].values.push(output);
-    })();
+  if (self.schema.unpack && self.schema.select) {
+    throw new Error('schema.unpack and schema.select cannot be used together');
   }
 
-
-  // SORT COLUMNS
-  if (self.order.cols.length > 0) {
-    self.series = self.series.sort(function(a, b){
-      var aTotal = 0;
-      var bTotal = 0;
-      each(a.values, function(record){
-        aTotal += record.value;
-      });
-      each(b.values, function(record){
-        bTotal += record.value;
-      });
-
-      if (self.order.cols == 'asc') {
-        return aTotal - bTotal;
-      } else {
-        return bTotal - aTotal;
+  if (self.schema.unpack) {
+    this.action = 'unpack';
+    options = extend({
+      collection: "",
+      unpack: {
+        index: false,
+        value: false,
+        label: false
+      },
+      sort: {
+        index: 'asc',
+        value: 'desc'
       }
-    });
+    }, self.schema);
+    options = _optHash(options);
+    _unpack.call(this, options);
   }
 
-  // BUILD TABLE
-  self.table = [];
-
-  //console.log(self.cols.fixed, self.cols.index);
-  //if (self.cols.index) {
-    self.table.push([self.cols.label]);
-    each(self.series[0].values, function(value){
-      self.table.push([value[self.cols.label]]);
-    });
-  /*} else {
-    self.table.push([]);
-    each(self.series[0].values, function(value){
-      self.table.push([]);
-    });
-  }*/
-
-  each(self.series, function(series){
-    self.table[0].push(series.key);
-    each(series.values, function(record, j){
-      self.table[j+1].push(record.value);
-    });
-  });
-
-  // COLUMN TRANSFORMS
-  /*
-  if (setup.cols.transform) {
-    for (var transform in setup.cols.transform) {
-      if (transform == 'all') {
-        each(self.table[0], function(column, index){
-          if (index > 0) {
-            self.table[0][index] = setup.cols.transform[transform](self.table[0][index]);
-          }
-        });
-      } else {
-        transform = parseInt(transform);
-        if (self.table[0].length > transform) {
-          self.table[0][transform] = setup.cols.transform[transform](self.table[0][transform]);
-        }
-      }
-    }
-  }*/
-
-  // ROW TRANSFORMS
-  /*
-  if (setup.rows.transform) {
-    each(self.table, function(row, index){
-      if (index > 0) {
-        for (var transform in setup.rows.transform) {
-          self.table[index][transform] = setup.rows.transform[transform](self.table[index][transform]);
-        }
-      }
-    });
-  }*/
+  if (self.schema.select) {
+    this.action = 'select';
+    options = extend({
+      collection: "",
+      select: true
+    }, self.schema);
+    options = _optHash(options);
+    _select.call(this, options);
+  }
 
   return this;
 };
+
+
+
+// Select
+// --------------------------------------
+
+function _select(options){
+  //console.log('Selecting', options);
+  var self = this,
+      target_set = [];
+
+  var root = (function(){
+    var root, parsed;
+    if (options.collection == "") {
+      root = self.raw;
+    } else {
+      parsed = parse.apply(self, [self.raw].concat(options.collection.split(" -> ")));
+      root = parsed[0];
+    }
+    if (Object.prototype.toString.call(root) !== '[object Array]') {
+      root = [root];
+    }
+    return root;
+  })();
+
+  each(options.select, function(property, i){
+    target_set.push(property.target.split(" -> "));
+  });
+
+  // Parse each record
+  each(root, function(record, interval){
+    var property_set = [];
+    each(target_set, function(target, i){
+      var result = parse.apply(self, [record].concat(target));
+      property_set.push(result[0]);
+      if (interval == 0) {
+        self.table[0].push(target[target.length-1]);
+      }
+    });
+    each(property_set, function(row, i){
+      self.table.push(property_set);
+    });
+  });
+
+  self.format(options.select);
+  self.sort(options.sort);
+  return self;
+}
+
+
+
+// Unpack
+// --------------------------------------
+
+function _unpack(options){
+  // console.log('Unpacking', options);
+  var self = this;
+
+  var value_set = (options.unpack.value) ? options.unpack.value.target.split(" -> ") : false,
+      label_set = (options.unpack.label) ? options.unpack.label.target.split(" -> ") : false,
+      index_set = (options.unpack.index) ? options.unpack.index.target.split(" -> ") : false;
+
+  var sort_index = (options.sort.index) ? options.sort.index : 'asc',
+      sort_value = (options.sort.index) ? options.sort.index : 'desc';
+
+  // Prepare root for parsing
+  var root = (function(){
+    var root;
+    if (options.collection == "") {
+      root = [self.raw];
+    } else {
+      root = parse.apply(self, [self.raw].concat(options.collection.split(" -> ")));
+    }
+    return root[0];
+  })();
+
+  // Inject data rows
+  each(root, function(){
+    self.table.push([]);
+  });
+
+  // Parse each record
+  each(root, function(record, interval){
+
+    var plucked_value = (value_set) ? parse.apply(self, [record].concat(value_set)) : false,
+        plucked_label = (label_set) ? parse.apply(self, [record].concat(label_set)) : false,
+        plucked_index = (index_set) ? parse.apply(self, [record].concat(index_set)) : false;
+    //console.log(plucked_value, plucked_label, plucked_index);
+
+    // Build index column
+    if (plucked_index) {
+
+      // Build index/label on first interval
+      if (interval == 0) {
+
+        // Push last index property to 0,0
+        self.table[0].push(index_set[index_set.length-1]);
+
+        // Build subsequent series headers (1:N)
+        if (plucked_label) {
+          each(plucked_label, function(value, i){
+            self.table[0].push(value);
+          });
+        } else {
+          self.table[0].push(value_set[value_set.length-1]);
+        }
+      }
+
+      self.table[interval+1].push(plucked_index[0]);
+    }
+
+    // Build label column
+    if (!plucked_index && plucked_label) {
+      if (interval == 0) {
+        self.table[0].push(label_set[label_set.length-1]);
+        self.table[0].push(value_set[value_set.length-1]);
+      }
+      self.table[interval+1].push(plucked_label[0]);
+    }
+
+    if (!plucked_index && !plucked_label) {
+      // [REVISIT]
+      self.table[0].push('');
+    }
+
+    // Append values
+    if (plucked_value) {
+      each(plucked_value, function(value, i){
+        self.table[interval+1].push(value);
+      });
+    }
+
+  });
+
+  self.format(options.unpack);
+  self.sort(options.sort);
+  return this;
+}
+
+
+
+// String configs to hash targets
+// --------------------------------------
+
+function _optHash(options){
+  each(options.unpack, function(value, key, object){
+    if (value && is(value, 'string')) {
+      options.unpack[key] = { target: options.unpack[key] };
+    }
+  });
+  return options;
+}
+
+
+
+// ♫♩♬ Holy Diver! ♬♩♫
+// --------------------------------------
 
 function parse() {
   var result = [];
@@ -232,9 +228,9 @@ function parse() {
 
     each(args, function(el){
 
-
+      //console.log('here', (target == ""), el, root);
       if (target == "" && typeof el == "number") {
-        //console.log(typeof(el), el);
+        //console.log('here', typeof(el), el);
         return result.push(el);
       }
       //
@@ -285,6 +281,10 @@ function parse() {
 }
 
 
+
+// Utilities
+// --------------------------------------
+
 // via: https://github.com/spocke/punymce
 function is(o, t){
   o = typeof(o);
@@ -319,3 +319,23 @@ function each(o, cb, s){
   }
   return 1;
 }
+
+// Adapter to exclude null values
+function extend(o, e){
+  each(e, function(v, n){
+    if (is(o[n], 'object') && is(v, 'object')){
+      o[n] = extend(o[n], v);
+    } else if (v !== null) {
+      o[n] = v;
+    }
+  });
+  return o;
+}
+
+
+// Configure moment.js if present
+!function(){
+  if (moment) {
+    moment.suppressDeprecationWarnings = true;
+  }
+}();

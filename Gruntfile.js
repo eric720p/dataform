@@ -17,7 +17,16 @@ module.exports = function(grunt) {
       },
       build: {
         src: [
-          "src/dataform.js"
+          "src/dataform.js",
+          "src/lib/format.js",
+          "src/lib/sort.js"
+          //"src/lib/average.js",
+          //"src/lib/count.js",
+          //"src/lib/maximum.js",
+          //"src/lib/median.js",
+          //"src/lib/minimum.js",
+          //"src/lib/mode.js",
+          //"src/lib/sum.js"
         ],
         dest: "dist/<%= pkg.name %>.js"
       }
