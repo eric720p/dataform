@@ -43,7 +43,6 @@ Dataform.prototype.format = function(opts){
 
           each(row, function(cell, j){
             self.table[i][j] = _applyFormat(self.table[i][j], options[j]);
-            //console.log(options[j].type);
           });
         }
 
@@ -98,8 +97,8 @@ function _applyFormat(value, opts){
 
   if (options.type && options.type == 'number') {
     if (options.format) {
-      console.log(options.format);
 
+      // Set decimals
       if (options.format.indexOf('.') !== -1) {
         output = (function(num){
           var chop = options.format.split('.');
@@ -108,6 +107,7 @@ function _applyFormat(value, opts){
         })(output);
       }
 
+      // Set commas
       if (options.format.indexOf(',') !== -1) {
         output = (function(num){
           while (/(\d+)(\d{3})/.test(num.toString())){
@@ -115,7 +115,6 @@ function _applyFormat(value, opts){
           }
           return num;
         })(output);
-        console.log(output);
       }
 
     }

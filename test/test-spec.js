@@ -191,15 +191,18 @@ describe("dataform", function() {
               target: "result",
               type: "number",
               label: "Metric",
-              format: "1,000",
+              format: "1,000.00",
               prefix: "$",
-              suffix: "/mo"
+              suffix: " per month"
             }
           ]
         });
         console.log('keen_metric.json', dataform);
 
         expect(dataform).to.have.property('table');
+        expect(dataform.table).to.be.of.length(2);
+        expect(dataform.table[0][0]).to.eql("Metric");
+        expect(dataform.table[1][0]).to.eql("$2,450.00 per month");
         done();
       });
     });
