@@ -1,7 +1,7 @@
 Dataform.prototype.sort = function(opts){
   var self = this, options;
 
-  if (self.action == 'select') {
+  if (self.action == 'unpack') {
 
     options = extend({
       index: false,
@@ -36,13 +36,13 @@ Dataform.prototype.sort = function(opts){
     }
 
     // Sort columns (labels) by total values
-    if (options.value && self.schema.select.label && self.table[0].length > 2) {
+    if (options.value && self.schema.unpack.label && self.table[0].length > 2) {
       !function(){
         var header = self.table[0],
             body = self.table.splice(1),
             series = [],
             table = [],
-            index_cell = (self.schema.select.index) ? 0 : -1;
+            index_cell = (self.schema.unpack.index) ? 0 : -1;
 
         each(header, function(cell, i){
           if (i > index_cell) {
@@ -61,7 +61,7 @@ Dataform.prototype.sort = function(opts){
           });
         });
 
-        if (self.schema.select.label.type == 'number' || is(body[0][1], 'number')) {
+        if (self.schema.unpack.label.type == 'number' || is(body[0][1], 'number')) {
           series.sort(function(a, b) {
             //console.log(options, self.schema, options.value, a.total, b.total);
             if (options.value == 'asc') {
@@ -94,7 +94,7 @@ Dataform.prototype.sort = function(opts){
     }
   }
 
-  if (self.action == 'reduce') {
+  if (self.action == 'select') {
 
     options = extend({
       column: 0,

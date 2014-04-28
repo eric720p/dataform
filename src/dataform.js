@@ -19,15 +19,15 @@ Dataform.prototype.configure = function(raw, schema){
     throw new Error('schema.collection must be a string');
   }
 
-  if (self.schema.select && self.schema.reduce) {
-    throw new Error('schema.select and schema.reduce cannot be used together');
+  if (self.schema.unpack && self.schema.select) {
+    throw new Error('schema.unpack and schema.select cannot be used together');
   }
 
-  if (self.schema.select) {
-    this.action = 'select';
+  if (self.schema.unpack) {
+    this.action = 'unpack';
     options = extend({
       collection: "",
-      select: {
+      unpack: {
         index: false,
         value: false,
         label: false
@@ -38,17 +38,17 @@ Dataform.prototype.configure = function(raw, schema){
       }
     }, self.schema);
     options = _optHash(options);
-    _selection.call(this, options);
+    _unpack.call(this, options);
   }
 
-  if (self.schema.reduce) {
-    this.action = 'reduce';
+  if (self.schema.select) {
+    this.action = 'select';
     options = extend({
       collection: "",
-      reduce: true
+      select: true
     }, self.schema);
     options = _optHash(options);
-    _reduction.call(this, options);
+    _select.call(this, options);
   }
 
   return this;
@@ -56,11 +56,11 @@ Dataform.prototype.configure = function(raw, schema){
 
 
 
-// Reduction
+// Select
 // --------------------------------------
 
-function _reduction(options){
-  //console.log('Reduction', options);
+function _select(options){
+  //console.log('Selecting', options);
   var self = this,
       target_set = [];
 
@@ -78,7 +78,7 @@ function _reduction(options){
     return root;
   })();
 
-  each(options.reduce, function(property, i){
+  each(options.select, function(property, i){
     target_set.push(property.target.split(" -> "));
   });
 
@@ -103,16 +103,16 @@ function _reduction(options){
 
 
 
-// Selection
+// Unpack
 // --------------------------------------
 
-function _selection(options){
-  // console.log('Selection', options);
+function _unpack(options){
+  // console.log('Unpacking', options);
   var self = this;
 
-  var value_set = (options.select.value) ? options.select.value.target.split(" -> ") : false,
-      label_set = (options.select.label) ? options.select.label.target.split(" -> ") : false,
-      index_set = (options.select.index) ? options.select.index.target.split(" -> ") : false;
+  var value_set = (options.unpack.value) ? options.unpack.value.target.split(" -> ") : false,
+      label_set = (options.unpack.label) ? options.unpack.label.target.split(" -> ") : false,
+      index_set = (options.unpack.index) ? options.unpack.index.target.split(" -> ") : false;
 
   var sort_index = (options.sort.index) ? options.sort.index : 'asc',
       sort_value = (options.sort.index) ? options.sort.index : 'desc';
@@ -196,9 +196,9 @@ function _selection(options){
 // --------------------------------------
 
 function _optHash(options){
-  each(options.select, function(value, key, object){
+  each(options.unpack, function(value, key, object){
     if (value && is(value, 'string')) {
-      options.select[key] = { target: options.select[key] };
+      options.unpack[key] = { target: options.unpack[key] };
     }
   });
   return options;
@@ -206,7 +206,7 @@ function _optHash(options){
 
 
 
-// Holy Diver!
+// ♫♩♬ Holy Diver! ♬♩♫
 // --------------------------------------
 
 function parse() {

@@ -12,7 +12,7 @@ describe("dataform", function() {
       $.getJSON("./data/git-traffic-data.json", function(response) {
         var dataform = new Dataform(response, {
           collection: "counts",
-          select: {
+          unpack: {
             index: "bucket",
             value: "total"
           },
@@ -35,7 +35,7 @@ describe("dataform", function() {
       $.getJSON("./data/keen_groupby.json", function(response) {
         var dataform = new Dataform(response, {
           collection: "result",
-          select: {
+          unpack: {
             value: "result",
             label: "page"
           },
@@ -58,7 +58,7 @@ describe("dataform", function() {
       $.getJSON("./data/keen2.json", function(response) {
         var dataform = new Dataform(response, {
           collection: "result",
-          select: {
+          unpack: {
             index: "timeframe -> start",
             value: "value -> result",
             label: "value -> parsed_user_agent.os.family"
@@ -84,7 +84,7 @@ describe("dataform", function() {
       $.getJSON("./data/keen.json", function(response) {
         var dataform = new Dataform(response, {
           collection: "result",
-          select: {
+          unpack: {
             index: "timeframe -> start",
             value: "value -> result -> number -> value",
             label: "value -> page"
@@ -110,7 +110,7 @@ describe("dataform", function() {
       $.getJSON("./data/keen.json", function(response) {
         var dataform = new Dataform(response, {
           collection: "result",
-          select: {
+          unpack: {
             index: "timeframe -> start",
             value: "value -> result -> number -> value",
             label: "value -> page"
@@ -137,7 +137,7 @@ describe("dataform", function() {
       $.getJSON("./data/twitter.json", function(response) {
         var dataform1 = new Dataform(response, {
           collection: "",
-          select: {
+          unpack: {
             index: "created_at",
             value: "text",
             label: "user -> screen_name"
@@ -148,7 +148,7 @@ describe("dataform", function() {
         });
         var dataform2 = new Dataform(response, {
           collection: "",
-          select: {
+          unpack: {
             index: "created_at",
             value: "text",
             label: "user -> screen_name"
@@ -182,7 +182,7 @@ describe("dataform", function() {
       $.getJSON("./data/keen_metric.json", function(response) {
         var dataform = new Dataform(response, {
           collection: "",
-          reduce: [
+          select: [
             {
               target: "result",
               type: "number"
@@ -200,7 +200,7 @@ describe("dataform", function() {
       $.getJSON("./data/keen_extraction.json", function(response) {
         var dataform = new Dataform(response, {
           collection: "result",
-          reduce: [
+          select: [
             {
               target: "keen -> timestamp",
               type: "date"
@@ -236,7 +236,7 @@ describe("dataform", function() {
       $.getJSON("./data/keen_extraction.json", function(response) {
         var dataform = new Dataform(response, {
           collection: "result",
-          reduce: [
+          select: [
             {
               target: "keen -> timestamp",
               type: "date"

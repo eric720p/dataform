@@ -5,27 +5,40 @@
 // - one row per collection item
 // - one row cell per config {object}
 // - one header cell per config.label
-reduce: [
-  {},{},{}
-],
-sort: {
-  2: 'asc'
+{
+  collection: '',
+  select: [
+    {},{},{}
+  ],
+  sort: {
+    2: 'asc'
+  }
 }
 
 // implicit structure
 // - one row per index (first cell)
 // - one row cell per value
 // - one header cell per label
-select: {
-  index: {},
-  value: {},
-  label: {}
-},
-sort: {
-  index: 'asc',
-  value: 'desc'
+
+// parse
+// unpack
+// pluck
+
+{
+  collection: '',
+  unpack: {
+    index: {},
+    value: {},
+    label: {}
+  },
+  sort: {
+    index: 'asc',
+    value: 'desc'
+  }
 }
 
+// ------------------
+// OUTDATED BELOW!
 // ------------------
 
 // keen2.json
