@@ -2,7 +2,7 @@
 node_modules
 
 #Bower
-test/assets
+lib
 
 #Logs
 *.log
