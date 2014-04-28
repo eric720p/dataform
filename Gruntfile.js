@@ -18,6 +18,7 @@ module.exports = function(grunt) {
       build: {
         src: [
           "src/dataform.js",
+          "src/lib/sort.js",
           "src/lib/average.js",
           "src/lib/count.js",
           "src/lib/maximum.js",

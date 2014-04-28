@@ -20,7 +20,7 @@ describe("dataform", function() {
             index: 'asc'
           }
         });
-        console.log('git-traffic-data.json', dataform);
+        //console.log('git-traffic-data.json', dataform);
         expect(dataform).to.have.property('table');
         expect(dataform.table).to.be.of.length(17);
         //expect(dataform.table[0]).to.be.of.length(2);
@@ -42,7 +42,7 @@ describe("dataform", function() {
             index: 'asc'
           }
         });
-        console.log('keen_groupby.json', dataform);
+        //console.log('keen_groupby.json', dataform);
         expect(dataform).to.have.property('table');
         done();
       });
@@ -62,7 +62,7 @@ describe("dataform", function() {
             value: 'desc'
           }
         });
-        console.log('keen2.json', dataform);
+        //console.log('keen2.json', dataform);
         expect(dataform).to.have.property('table');
         done();
       });
@@ -81,7 +81,7 @@ describe("dataform", function() {
             index: 'asc'
           }
         });
-        console.log('keen.json', dataform);
+        //console.log('keen.json', dataform);
         expect(dataform).to.have.property('table');
         done();
       });
@@ -111,8 +111,8 @@ describe("dataform", function() {
             index: 'desc'
           }
         });
-        console.log('twitter.json', dataform1);
-        console.log('twitter.json', dataform2);
+        //console.log('twitter.json', dataform1);
+        //console.log('twitter.json', dataform2);
         expect(dataform1).to.have.property('table');
         expect(dataform1.table[0][0]).to.eql("created_at");
         expect(dataform1.table[0][1]).to.eql("larimer");
@@ -133,11 +133,36 @@ describe("dataform", function() {
           reduce: [
             {
               target: "result",
-              type: 'number'
+              type: "number"
             }
           ]
         });
         console.log('keen_metric.json', dataform);
+        expect(dataform).to.have.property('table');
+        done();
+      });
+    });
+
+    it("keen_extraction.json", function(done){
+      $.getJSON("./data/keen_extraction.json", function(response) {
+        var dataform = new Dataform(response, {
+          collection: "result",
+          reduce: [
+            {
+              target: "keen -> timestamp",
+              type: "date"
+            },
+            {
+              target: "page",
+              type: "string"
+            },
+            {
+              target: "referrer",
+              type: "string"
+            }
+          ]
+        });
+        console.log('keen_extraction.json', dataform);
         expect(dataform).to.have.property('table');
         done();
       });
