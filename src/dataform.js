@@ -25,6 +25,7 @@ Dataform.prototype.configure = function(raw, schema){
   }
 
   if (self.schema.select) {
+    this.action = 'select';
     options = extend({
       collection: "",
       select: {
@@ -42,6 +43,7 @@ Dataform.prototype.configure = function(raw, schema){
   }
 
   if (self.schema.reduce) {
+    this.action = 'reduce';
     options = extend({
       collection: "",
       reduce: true
@@ -51,6 +53,80 @@ Dataform.prototype.configure = function(raw, schema){
   }
 
   return this;
+};
+
+Dataform.prototype.sort = function(opts){
+  var self = this, options;
+
+  if (self.action == 'select') {
+
+    options = extend({
+      index: false,
+      value: false
+    }, opts);
+
+    if (options.index) {
+      !function(){
+        var header = self.table[0];
+        var body = self.table.splice(1);
+        body.sort(function(a, b) {
+          if (options.index == 'asc') {
+            if (a[0] > b[0]) {
+              return 1;
+            } else {
+              return -1
+            }
+          } else {
+            if (a[0] > b[0]) {
+              return -1;
+            } else {
+              return 1
+            }
+          }
+          return false;
+        });
+        self.table = [header].concat(body);
+      }();
+    }
+
+    if (options.value && self.schema.select.label && self.table[0].length > 2) {
+      !function(){
+        var series = [];
+        each(self.table[0], function(column, i){
+          if (i > 0) {
+            series.push({ label: column, values: [], total: 0 });
+          }
+        });
+        //if (self.schema.select.label.type == 'number' || is(self.table[1][1], 'number')) {}
+        each(self.table, function(row, i){
+          if (i > 0) {
+            each(row, function(cell, j){
+              if (j > 0) {
+                if (is(cell, 'number')) {
+                  series[j-1].total += cell;
+                }
+                series[j-1].values.push(cell);
+              }
+            });
+          }
+        });
+        console.log(series, self.table);
+      }();
+    }
+  }
+
+
+  /////////////////
+
+  if (self.action == 'reduce') {
+    options = extend({
+      0: 'asc',
+      value: 'desc'
+    }, opts);
+    console.log(options);
+  }
+
+  return self;
 };
 
 // Convert string targets to
@@ -73,8 +149,7 @@ function _reduction(options){
 
 function _selection(options){
   // console.log('Selection', options);
-  var self = this,
-      series = [];
+  var self = this;
 
   var value_set = (options.select.value) ? options.select.value.target.split(" -> ") : false,
       label_set = (options.select.label) ? options.select.label.target.split(" -> ") : false,
@@ -94,9 +169,8 @@ function _selection(options){
     return root[0];
   })();
 
-
   // Sort records by index
-  if (root instanceof Array) {
+  /*if (root instanceof Array) {
     root.sort(function(a, b){
       var sort_a_by, sort_b_by, sort_set, sort_dir;
 
@@ -129,7 +203,7 @@ function _selection(options){
       }
       return false;
     });
-  }
+  }*/
 
 
   // Inject header row
@@ -138,9 +212,7 @@ function _selection(options){
   // Inject data rows
   each(root, function(){
     self.table.push([]);
-    // test.series.push({ label: undefined, values: [] });
   });
-
 
 
   // Parse each record
@@ -164,8 +236,6 @@ function _selection(options){
         if (plucked_label) {
           each(plucked_label, function(value, i){
             self.table[0].push(value);
-            // Build series for later sorting
-            //series.push({ label: value, values: [] });
           });
         } else {
           self.table[0].push(value_set[value_set.length-1]);
@@ -175,13 +245,6 @@ function _selection(options){
       self.table[interval+1].push(plucked_index[0]);
     }
 
-    if (plucked_label) {
-      each(plucked_label, function(value, i){
-        // Build series for later sorting
-        //series.push({ label: value, values: [] });
-      });
-    }
-
     // Build label column
     if (!plucked_index && plucked_label) {
       if (interval == 0) {
@@ -189,9 +252,6 @@ function _selection(options){
         self.table[0].push(value_set[value_set.length-1]);
       }
       self.table[interval+1].push(plucked_label[0]);
-
-      // Build series for later sorting
-      //series.push({ label: plucked_label[0], values: [] });
     }
 
     if (!plucked_index && !plucked_label) {
@@ -203,20 +263,15 @@ function _selection(options){
     // Append values
     if (plucked_value) {
       each(plucked_value, function(value, i){
-
-        // Match values to correct series
-
-        console.log(plucked_value.length, series.length);
         self.table[interval+1].push(value);
-
-        // Append values to series
-        //series[i].values.push(value);
       });
     }
 
   });
 
-  console.log(series);
+  self.sort(options.sort);
+
+  return this;
 
   // ------------------------------
   // ------------------------------
@@ -411,7 +466,7 @@ function _selection(options){
     });
   }*/
 
-  return this;
+  //return this;
 }
 
 
