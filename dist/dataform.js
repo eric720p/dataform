@@ -80,7 +80,7 @@ function _select(options){
   })();
 
   each(options.select, function(property, i){
-    target_set.push(property.target.split(" -> "));
+    target_set.push(property.path.split(" -> "));
   });
 
   // Parse each record
@@ -112,9 +112,9 @@ function _unpack(options){
   // console.log('Unpacking', options);
   var self = this;
 
-  var value_set = (options.unpack.value) ? options.unpack.value.target.split(" -> ") : false,
-      label_set = (options.unpack.label) ? options.unpack.label.target.split(" -> ") : false,
-      index_set = (options.unpack.index) ? options.unpack.index.target.split(" -> ") : false;
+  var value_set = (options.unpack.value) ? options.unpack.value.path.split(" -> ") : false,
+      label_set = (options.unpack.label) ? options.unpack.label.path.split(" -> ") : false,
+      index_set = (options.unpack.index) ? options.unpack.index.path.split(" -> ") : false;
 
   var sort_index = (options.sort.index) ? options.sort.index : 'asc',
       sort_value = (options.sort.index) ? options.sort.index : 'desc';
@@ -195,13 +195,13 @@ function _unpack(options){
 
 
 
-// String configs to hash targets
+// String configs to hash paths
 // --------------------------------------
 
 function _optHash(options){
   each(options.unpack, function(value, key, object){
     if (value && is(value, 'string')) {
-      options.unpack[key] = { target: options.unpack[key] };
+      options.unpack[key] = { path: options.unpack[key] };
     }
   });
   return options;
