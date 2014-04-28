@@ -1,18 +1,17 @@
 {
   "name": "dataform",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "main": "./dist/dataform.js",
   "authors": [
     "Dustin Larimer <dustin@keen.io>"
   ],
-  "private": true,
+  "private": false,
   "ignore": [
     "**/.*",
     "node_modules",
     "bower_components",
     "src",
-    "test",
-    "sample-data",
-    "sample-vis"
+    "test"
   ],
   "devDependencies": {
     "mocha": "~1.18.2",
