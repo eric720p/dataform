@@ -160,7 +160,12 @@ describe("dataform", function() {
               target: "referrer",
               type: "string"
             }
-          ]
+          ],
+          sort: {
+            //0: 'asc'
+            column: 0,
+            order: 'asc'
+          }
         });
         console.log('keen_extraction.json', dataform);
         expect(dataform).to.have.property('table');

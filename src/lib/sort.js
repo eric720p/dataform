@@ -94,14 +94,39 @@ Dataform.prototype.sort = function(opts){
     }
   }
 
-  ////////////////////
   if (self.action == 'reduce') {
+
     options = extend({
-      0: 'asc'
+      column: 0,
+      order: 'asc'
     }, opts);
-    console.log(options);
+
+    !function(){
+      var header = self.table[0],
+          body = self.table.splice(1);
+
+      body.sort(function(a, b){
+        //console.log(a[options.column], b[options.column]);
+        if (options.order == 'asc') {
+          if (a[options.column] > b[options.column]) {
+            return 1;
+          } else {
+            return -1
+          }
+        } else {
+          if (a[options.column] > b[options.column]) {
+            return -1;
+          } else {
+            return 1
+          }
+        }
+        return false;
+      });
+
+      self.table = [header].concat(body);
+
+    }();
   }
-  ////////////////////
 
   return self;
 };
