@@ -2,7 +2,7 @@
 node_modules
 
 #Bower
-lib
+bower_components
 
 #Logs
 *.log

@@ -14,7 +14,7 @@ describe("dataform", function() {
           collection: "counts",
           unpack: {
             index: {
-              target: "bucket",
+              path: "bucket",
               type: "date",
               format: "MMM DD"
             },
@@ -42,7 +42,7 @@ describe("dataform", function() {
           unpack: {
             value: "result",
             label: {
-              target: "page",
+              path: "page",
               type: "string",
               replace: {
                 "http://dustinlarimer.com/": "Home"
@@ -72,7 +72,7 @@ describe("dataform", function() {
             index: "timeframe -> start",
             value: "value -> result",
             label: {
-              target: "value -> parsed_user_agent.os.family",
+              path: "value -> parsed_user_agent.os.family",
               type: "string"
               //format: "lowercase"
             }
@@ -164,16 +164,16 @@ describe("dataform", function() {
           collection: "",
           unpack: {
             index: {
-              target: "created_at"
+              path: "created_at"
             },
             value: {
-              target: "text",
+              path: "text",
               type: "string",
               prefix: "SITE: ",
               format: "uppercase"
             },
             label: {
-              target: "user -> screen_name",
+              path: "user -> screen_name",
               prefix: "@"
             }
           },
@@ -215,7 +215,7 @@ describe("dataform", function() {
           collection: "",
           unpack: {
             index: {
-              target: "created_at",
+              path: "created_at",
               type: "date",
               method: "Twitter.DateFixer",
               format: "MMM DD, YYYY"
@@ -245,7 +245,7 @@ describe("dataform", function() {
           collection: "",
           select: [
             {
-              target: "result",
+              path: "result",
               type: "number",
               label: "Metric",
               format: "1,000.00",
@@ -270,17 +270,17 @@ describe("dataform", function() {
           collection: "result",
           select: [
             {
-              target: "keen -> timestamp",
+              path: "keen -> timestamp",
               type: "date",
               label: "Time"
             },
             {
-              target: "page",
+              path: "page",
               type: "string",
               label: "Page"
             },
             {
-              target: "referrer",
+              path: "referrer",
               type: "string",
               label: "Referrer"
             }
@@ -309,15 +309,15 @@ describe("dataform", function() {
           collection: "result",
           select: [
             {
-              target: "keen -> timestamp",
+              path: "keen -> timestamp",
               type: "date"
             },
             {
-              target: "page",
+              path: "page",
               type: "string"
             },
             {
-              target: "referrer",
+              path: "referrer",
               type: "string",
               prefix: "@",
               suffix: "/mo"
