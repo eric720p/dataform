@@ -6,7 +6,7 @@ describe("dataform", function() {
     // console.log("ready");
   });
 
-  describe(".table", function() {
+  describe("dataform.table construction", function() {
 
     it("git-traffic-data.json", function(done){
       $.getJSON("./data/git-traffic-data.json", function(response) {
@@ -41,7 +41,13 @@ describe("dataform", function() {
           collection: "result",
           unpack: {
             value: "result",
-            label: "page"
+            label: {
+              target: "page",
+              type: "string",
+              replace: {
+                "http://dustinlarimer.com/": "Home"
+              }
+            }
           },
           sort: {
             index: 'asc'
@@ -65,7 +71,11 @@ describe("dataform", function() {
           unpack: {
             index: "timeframe -> start",
             value: "value -> result",
-            label: "value -> parsed_user_agent.os.family"
+            label: {
+              target: "value -> parsed_user_agent.os.family",
+              type: "string"
+              //format: "lowercase"
+            }
           },
           sort: {
             index: 'asc',
@@ -153,9 +163,19 @@ describe("dataform", function() {
         var dataform2 = new Dataform(response, {
           collection: "",
           unpack: {
-            index: "created_at",
-            value: "text",
-            label: "user -> screen_name"
+            index: {
+              target: "created_at"
+            },
+            value: {
+              target: "text",
+              type: "string",
+              prefix: "SITE: ",
+              format: "uppercase"
+            },
+            label: {
+              target: "user -> screen_name",
+              prefix: "@"
+            }
           },
           sort: {
             index: 'desc'
@@ -176,8 +196,45 @@ describe("dataform", function() {
         expect(dataform2.table[0]).to.be.of.length(2);
         expect(dataform2).to.have.property('table');
         expect(dataform2.table[0][0]).to.eql("created_at");
-        expect(dataform2.table[0][1]).to.eql("larimer");
+        expect(dataform2.table[0][1]).to.eql("@larimer");
         expect(dataform2.table[1][0]).to.be.eql('Tue Mar 25 20:19:50 +0000 2014');
+        done();
+      });
+    });
+
+    it("External method call (twitter.json)", function(done){
+      $.getJSON("./data/twitter.json", function(response) {
+        window.Twitter = {
+          DateFixer: function(str, opt) {
+            var parsed = Date.parse(str);
+            var date = new Date(parsed);
+            return date;
+          }
+        };
+        var dataform = new Dataform(response, {
+          collection: "",
+          unpack: {
+            index: {
+              target: "created_at",
+              type: "date",
+              method: "Twitter.DateFixer",
+              format: "MMM DD, YYYY"
+            },
+            value: "text",
+            label: "user -> screen_name"
+          },
+          sort: {
+            index: 'desc'
+          }
+        });
+        console.log('twitter.json Ext Method', dataform);
+
+        expect(dataform).to.have.property("table");
+        expect(dataform.table).to.be.of.length(3);
+        expect(dataform.table[0]).to.be.of.length(2);
+        expect(dataform.table[0][0]).to.eql("created_at");
+        expect(dataform.table[0][1]).to.eql("larimer");
+        expect(dataform.table[1][0]).to.be.eql("Mar 25, 2014");
         done();
       });
     });
