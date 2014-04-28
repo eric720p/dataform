@@ -87,6 +87,7 @@ Dataform.prototype.sort = function(opts){
           }
           return false;
         });
+
         self.table = [header].concat(body);
       }();
     }
@@ -97,8 +98,8 @@ Dataform.prototype.sort = function(opts){
         var header = self.table[0],
             body = self.table.splice(1),
             series = [],
-            index_cell = (self.schema.select.index) ? 0 : -1,
-            table = [];
+            table = [],
+            index_cell = (self.schema.select.index) ? 0 : -1;
 
         each(header, function(cell, i){
           if (i > index_cell) {
@@ -135,26 +136,29 @@ Dataform.prototype.sort = function(opts){
             }
             return false;
           });
-          each(series, function(column, i){
-            header[index_cell+1+i] = series[i].label;
-            each(body, function(row, j){
-              row[index_cell+1+i] = series[i].values[j];
-            });
-          });
-          this.table = [header].concat(body);
         }
+
+        each(series, function(column, i){
+          header[index_cell+1+i] = series[i].label;
+          each(body, function(row, j){
+            row[index_cell+1+i] = series[i].values[j];
+          });
+        });
+
+        self.table = [header].concat(body);
+
       }();
     }
   }
 
   ////////////////////
-
   if (self.action == 'reduce') {
     options = extend({
       0: 'asc'
     }, opts);
     console.log(options);
   }
+  ////////////////////
 
   return self;
 };
@@ -171,11 +175,12 @@ function _optHash(options){
   return options;
 }
 
+////////////////////
 function _reduction(options){
   console.log('Reduction', options);
   return this;
 }
-
+////////////////////
 
 function _selection(options){
   // console.log('Selection', options);
@@ -252,6 +257,7 @@ function _selection(options){
       self.table[0].push('');
     }
 
+    //console.log('pluck', root, plucked_value, value_set);
 
     // Append values
     if (plucked_value) {
@@ -260,208 +266,135 @@ function _selection(options){
       });
     }
 
+    if (is(record, 'number') && root[interval] == record) {
+      //this.table = [['label', 'value'],['result', record]];
+    }
+
   });
 
   self.sort(options.sort);
   return this;
+}
 
-  // ------------------------------
-  // ------------------------------
-  // ------------------------------
+function parse() {
+  var result = [];
+  var loop = function() {
+    var root = arguments[0];
+    var args = Array.prototype.slice.call(arguments, 1);
+    var target = args.pop();
 
-  //self.map = this.schema;
-  //self.table = [],
-  //self.series = [],
-  //self.raw = data;
-
-  /*
-  self.cols = (function(){
-    var split_index, split_value, output = { fixed: [] };
-
-    split_value = self.schema.select.value.target.split(" -> ");
-    split_index = (self.schema.select.index.target) ? self.schema.select.index.target.split(" -> ") : self.schema.select.value.target.split(" -> ");
-    output.fixed.push(split_index[split_index.length-1]);
-
-    if (self.schema.select.label.target) {
-      output.cells = self.schema.select.label.target.split(" -> ");
-    } else {
-      output.fixed.push(split_value[split_value.length-1])
+    if (args.length === 0) {
+      if (root instanceof Array) {
+        args = root;
+      } else if (typeof root === 'object') {
+        args.push(root);
+      }
     }
-    return output;
 
-  })();
+    each(args, function(el){
 
+      //console.log('here', (target == ""), el, root);
+      if (target == "" && typeof el == "number") {
+        //console.log('here', typeof(el), el);
+        return result.push(el);
+      }
+      //
 
-  self.rows = {
-    index: (self.schema.select.index.target) ? self.schema.select.index.target.split(" -> ") : ['result'],
-    cells: (self.schema.select.value.target) ? self.schema.select.value.target.split(" -> ") : []
-  };
-
-  self.order = (function(){
-    var output = {};
-    if (self.schema.sort) {
-      output.rows = self.schema.sort.index || 'asc';
-      output.cols = self.schema.sort.label || 'desc';
-    }
-    return output;
-  })();
-
-  // SORT ROWS
-  if (self.order.rows.length > 0) {
-    if (self.root instanceof Array) {
-      self.root.sort(function(a, b){
-        var aIndex = parse.apply(self, [a].concat(self.rows.index));
-        var bIndex = parse.apply(self, [b].concat(self.rows.index));
-
-        if (self.order.rows == 'asc') {
-          if (aIndex > bIndex){return 1;}
-          if (aIndex < bIndex){return -1;}
-          return 0;
+      if (el[target] || el[target] === 0 || el[target] !== void 0) {
+        // Easy grab!
+        if (el[target] === null) {
+          return result.push('');
         } else {
-          if (aIndex > bIndex){return -1;}
-          if (aIndex < bIndex){return 1;}
+          return result.push(el[target]);
+        }
+
+      } else if (root[el]){
+        if (root[el] instanceof Array) {
+          // dive through each array item
+
+          each(root[el], function(n, i) {
+            var splinter = [root[el]].concat(root[el][i]).concat(args.slice(1)).concat(target);
+            return loop.apply(this, splinter);
+          });
+
+        } else {
+          if (root[el][target]) {
+            // grab it!
+            return result.push(root[el][target]);
+
+          } else {
+            // dive down a level!
+            return loop.apply(this, [root[el]].concat(args.splice(1)).concat(target));
+
+          }
+        }
+
+      } else {
+        // dive down a level!
+        return loop.apply(this, [el].concat(args.splice(1)).concat(target));
+
+      }
+
+      return;
+
+    });
+    if (result.length > 0) {
+      return result;
+    }
+  };
+  return loop.apply(this, arguments);
+}
+
+// via: https://github.com/spocke/punymce
+function is(o, t){
+  o = typeof(o);
+  if (!t){
+    return o != 'undefined';
+  }
+  return o == t;
+}
+
+function each(o, cb, s){
+  var n;
+  if (!o){
+    return 0;
+  }
+  s = !s ? o : s;
+  if (is(o.length)){
+    // Indexed arrays, needed for Safari
+    for (n=0; n<o.length; n++) {
+      if (cb.call(s, o[n], n, o) === false){
+        return 0;
+      }
+    }
+  } else {
+    // Hashtables
+    for (n in o){
+      if (o.hasOwnProperty(n)) {
+        if (cb.call(s, o[n], n, o) === false){
           return 0;
         }
-
-        return false;
-      });
+      }
     }
   }
+  return 1;
+}
 
-  // ADD SERIES
-  (function(){
-    //var fixed, cells, output;
-    //self.cols.label = (self.cols.fixed.length > 0) ? self.cols.fixed[0] : 'series';
-    if (self.cols.fixed && self.cols.fixed[self.cols.fixed.length-1] == "") {
-      self.cols.label = self.cols.fixed[self.cols.fixed.length-1];
-      fixed = self.cols.fixed;
-      fixed.splice((fixed.length-1),1);
-    } else {
-      self.cols.label = fixed = self.cols.fixed[0];
-      fixed = self.cols.fixed;
+// Adapter to exclude null values
+function extend(o, e){
+  each(e, function(v, n){
+    if (is(o[n], 'object') && is(v, 'object')){
+      o[n] = extend(o[n], v);
+    } else if (v !== null) {
+      o[n] = v;
     }
-
-    //var fixed = (self.cols.fixed) ? self.cols.fixed : [];
-    var cells = (self.cols.cells) ? parse.apply(self, [self.root[0]].concat(self.cols.cells)) : [];
-    var output = fixed.concat(cells);
-    if (output.length > 1) {
-      output.splice(0,1);
-    }
-    each(output, function(el, i){
-      self.series.push({ key: el, values: [] });
-    });
-  })();
-
-  // ADD SERIES' RECORDS
-  if (self.root instanceof Array || typeof self.root == 'object') {
-    each(self.root, function(el){
-      var index = parse.apply(self, [el].concat(self.rows.index));
-      var cells = parse.apply(self, [el].concat(self.rows.cells));
-      //console.log(index, cells);
-      if (index.length > 1) {
-        each(index, function(key, j){
-          var output = {};
-          output[self.cols.label] = key;
-          output.value = cells[j];
-          self.series[0].values.push(output);
-        });
-      } else {
-        each(cells, function(cell, j){
-          var output = {};
-          output[self.cols.label] = index[0];
-          output.value = cell;
-          self.series[j].values.push(output);
-        });
-      }
-    });
-  } else {
-    (function(){
-      var output = {};
-      output[self.cols.label] = 'result';
-      output.value = self.root;
-      self.series[0].values.push(output);
-    })();
-  }
-
-
-  // SORT COLUMNS
-  if (self.order.cols.length > 0) {
-    self.series = self.series.sort(function(a, b){
-      var aTotal = 0;
-      var bTotal = 0;
-      each(a.values, function(record){
-        aTotal += record.value;
-      });
-      each(b.values, function(record){
-        bTotal += record.value;
-      });
-
-      if (self.order.cols == 'asc') {
-        return aTotal - bTotal;
-      } else {
-        return bTotal - aTotal;
-      }
-    });
-  }
-
-  // BUILD TABLE
-  //self.table = [];
-
-  //console.log(self.cols.fixed, self.cols.index);
-  //if (self.cols.index) {
-    self.table.push([self.cols.label]);
-    each(self.series[0].values, function(value){
-      self.table.push([value[self.cols.label]]);
-    });
-  /*} else {
-    self.table.push([]);
-    each(self.series[0].values, function(value){
-      self.table.push([]);
-    });
-  }*/
-
-  /*each(self.series, function(series){
-    self.table[0].push(series.key);
-    each(series.values, function(record, j){
-      self.table[j+1].push(record.value);
-    });
-  });*/
-
-  // COLUMN TRANSFORMS
-  /*
-  if (setup.cols.transform) {
-    for (var transform in setup.cols.transform) {
-      if (transform == 'all') {
-        each(self.table[0], function(column, index){
-          if (index > 0) {
-            self.table[0][index] = setup.cols.transform[transform](self.table[0][index]);
-          }
-        });
-      } else {
-        transform = parseInt(transform);
-        if (self.table[0].length > transform) {
-          self.table[0][transform] = setup.cols.transform[transform](self.table[0][transform]);
-        }
-      }
-    }
-  }*/
-
-  // ROW TRANSFORMS
-  /*
-  if (setup.rows.transform) {
-    each(self.table, function(row, index){
-      if (index > 0) {
-        for (var transform in setup.rows.transform) {
-          self.table[index][transform] = setup.rows.transform[transform](self.table[index][transform]);
-        }
-      }
-    });
-  }*/
-
-  //return this;
+  });
+  return o;
 }
 
 
+
+/*
 Dataform.prototype.build = function(data, schema) {
   var self = this, map = schema;
 
@@ -488,47 +421,6 @@ Dataform.prototype.build = function(data, schema) {
     }
     return root[0];
   })();
-
-  /*
-  each(root, function(){
-    // Prefill data structures
-    test.table.push([]);
-    // test.series.push({ label: undefined, values: [] });
-  });
-
-  // Retrieve indices
-  if (options.select && options.select.index) {
-    (function(){
-      var index_trail = options.select.index.target.split(" -> ");
-      var indices = parse.apply(self, [root].concat(index_trail));
-      test.table[0].push(index_trail[index_trail.length-1]);
-      each(indices, function(index, i){
-        test.table[i+1].push(index);
-        // test.series[i].values.push({ index: index, value: undefined });
-      });
-      console.log(index_trail, indices);
-    })();
-  }
-
-  // Retrieve labels
-  if (options.select && options.select.label) {
-    // Dynamic
-    (function(){
-      var label_trail = options.select.label.target.split(" -> ");
-      var labels = parse.apply(self, [root].concat(label_trail));
-      each(labels, function(label, i){
-        test.table[0].push(label);
-      });
-      console.log(label_trail, labels);
-    })();
-  } else {
-    // Static
-    (function(){
-      var value_key = (options.select) ? options.select.value.target.split(" -> ") : [];
-      var label = value_key[value_key.length-1];
-      test.table[0].push(label);
-    })();
-  }*/
 
   // ------------------------------
   // ------------------------------
@@ -682,7 +574,7 @@ Dataform.prototype.build = function(data, schema) {
     each(self.series[0].values, function(value){
       self.table.push([]);
     });
-  }*/
+  }*
 
   each(self.series, function(series){
     self.table[0].push(series.key);
@@ -720,123 +612,7 @@ Dataform.prototype.build = function(data, schema) {
         }
       }
     });
-  }*/
+  }*
 
   return this;
-};
-
-function parse() {
-  var result = [];
-  var loop = function() {
-    var root = arguments[0];
-    var args = Array.prototype.slice.call(arguments, 1);
-    var target = args.pop();
-
-    if (args.length === 0) {
-      if (root instanceof Array) {
-        args = root;
-      } else if (typeof root === 'object') {
-        args.push(root);
-      }
-    }
-
-    each(args, function(el){
-
-
-      if (target == "" && typeof el == "number") {
-        //console.log(typeof(el), el);
-        return result.push(el);
-      }
-      //
-
-      if (el[target] || el[target] === 0 || el[target] !== void 0) {
-        // Easy grab!
-        if (el[target] === null) {
-          return result.push('');
-        } else {
-          return result.push(el[target]);
-        }
-
-      } else if (root[el]){
-        if (root[el] instanceof Array) {
-          // dive through each array item
-
-          each(root[el], function(n, i) {
-            var splinter = [root[el]].concat(root[el][i]).concat(args.slice(1)).concat(target);
-            return loop.apply(this, splinter);
-          });
-
-        } else {
-          if (root[el][target]) {
-            // grab it!
-            return result.push(root[el][target]);
-
-          } else {
-            // dive down a level!
-            return loop.apply(this, [root[el]].concat(args.splice(1)).concat(target));
-
-          }
-        }
-
-      } else {
-        // dive down a level!
-        return loop.apply(this, [el].concat(args.splice(1)).concat(target));
-
-      }
-
-      return;
-
-    });
-    if (result.length > 0) {
-      return result;
-    }
-  };
-  return loop.apply(this, arguments);
-}
-
-// via: https://github.com/spocke/punymce
-function is(o, t){
-  o = typeof(o);
-  if (!t){
-    return o != 'undefined';
-  }
-  return o == t;
-}
-
-function each(o, cb, s){
-  var n;
-  if (!o){
-    return 0;
-  }
-  s = !s ? o : s;
-  if (is(o.length)){
-    // Indexed arrays, needed for Safari
-    for (n=0; n<o.length; n++) {
-      if (cb.call(s, o[n], n, o) === false){
-        return 0;
-      }
-    }
-  } else {
-    // Hashtables
-    for (n in o){
-      if (o.hasOwnProperty(n)) {
-        if (cb.call(s, o[n], n, o) === false){
-          return 0;
-        }
-      }
-    }
-  }
-  return 1;
-}
-
-// Adapter to exclude null values
-function extend(o, e){
-  each(e, function(v, n){
-    if (is(o[n], 'object') && is(v, 'object')){
-      o[n] = extend(o[n], v);
-    } else if (v !== null) {
-      o[n] = v;
-    }
-  });
-  return o;
-}
+};*/

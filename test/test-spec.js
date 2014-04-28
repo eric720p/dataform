@@ -126,6 +126,22 @@ describe("dataform", function() {
       });
     });
 
+    it("keen_metric.json", function(done){
+      $.getJSON("./data/keen_metric.json", function(response) {
+        var dataform = new Dataform(response, {
+          collection: "",
+          reduce: [
+            {
+              target: "result",
+              type: 'number'
+            }
+          ]
+        });
+        console.log('keen_metric.json', dataform);
+        expect(dataform).to.have.property('table');
+        done();
+      });
+    });
 
   });
 
