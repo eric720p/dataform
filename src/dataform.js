@@ -97,6 +97,7 @@ function _select(options){
     });
   });
 
+  self.format(options.select);
   self.sort(options.sort);
   return self;
 }
@@ -186,6 +187,7 @@ function _unpack(options){
 
   });
 
+  self.format(options.unpack);
   self.sort(options.sort);
   return this;
 }

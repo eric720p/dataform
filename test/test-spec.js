@@ -13,7 +13,11 @@ describe("dataform", function() {
         var dataform = new Dataform(response, {
           collection: "counts",
           unpack: {
-            index: "bucket",
+            index: {
+              target: "bucket",
+              type: "date",
+              format: "MMM DD"
+            },
             value: "total"
           },
           sort: {
@@ -185,7 +189,8 @@ describe("dataform", function() {
           select: [
             {
               target: "result",
-              type: "number"
+              type: "number",
+              label: "Metric"
             }
           ]
         });
@@ -203,15 +208,18 @@ describe("dataform", function() {
           select: [
             {
               target: "keen -> timestamp",
-              type: "date"
+              type: "date",
+              label: "Time"
             },
             {
               target: "page",
-              type: "string"
+              type: "string",
+              label: "Page"
             },
             {
               target: "referrer",
-              type: "string"
+              type: "string",
+              label: "Referrer"
             }
           ],
           sort: {
@@ -224,9 +232,9 @@ describe("dataform", function() {
         expect(dataform).to.have.property('table');
         expect(dataform.table).to.be.of.length(28);
         expect(dataform.table[0]).to.be.of.length(3);
-        expect(dataform.table[0][0]).to.eql("timestamp");
-        expect(dataform.table[0][1]).to.eql("page");
-        expect(dataform.table[0][2]).to.eql("referrer");
+        expect(dataform.table[0][0]).to.eql("Time");
+        expect(dataform.table[0][1]).to.eql("Page");
+        expect(dataform.table[0][2]).to.eql("Referrer");
         expect(dataform.table[1][0]).to.be.eql("2014-04-25T20:38:04.084Z");
         done();
       });
@@ -247,7 +255,9 @@ describe("dataform", function() {
             },
             {
               target: "referrer",
-              type: "string"
+              type: "string",
+              prefix: "@",
+              suffix: "/mo"
             }
           ],
           sort: {
