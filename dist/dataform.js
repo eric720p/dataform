@@ -66,10 +66,12 @@ Dataform.prototype.sort = function(opts){
       value: false
     }, opts);
 
+    // Sort records by index
     if (options.index) {
       !function(){
-        var header = self.table[0];
-        var body = self.table.splice(1);
+        var header = self.table[0],
+            body = self.table.splice(1);
+
         body.sort(function(a, b) {
           if (options.index == 'asc') {
             if (a[0] > b[0]) {
@@ -90,38 +92,67 @@ Dataform.prototype.sort = function(opts){
       }();
     }
 
+    // Sort columns (labels) by total values
     if (options.value && self.schema.select.label && self.table[0].length > 2) {
       !function(){
-        var series = [];
-        each(self.table[0], function(column, i){
-          if (i > 0) {
-            series.push({ label: column, values: [], total: 0 });
+        var header = self.table[0],
+            body = self.table.splice(1),
+            series = [],
+            index_cell = (self.schema.select.index) ? 0 : -1,
+            table = [];
+
+        each(header, function(cell, i){
+          if (i > index_cell) {
+            series.push({ label: cell, values: [], total: 0 });
           }
         });
-        each(self.table, function(row, i){
-          if (i > 0) {
-            each(row, function(cell, j){
-              if (j > 0) {
-                if (is(cell, 'number')) {
-                  console.log('cell is a number!');
-                }
-                series[j-1].values.push(cell);
+
+        each(body, function(row, i){
+          each(row, function(cell, j){
+            if (j > index_cell) {
+              if (is(cell, 'number')) {
+                series[j-1].total += cell;
               }
-            });
-          }
+              series[j-1].values.push(cell);
+            }
+          });
         });
-        console.log(series, self.table);
+
+        if (self.schema.select.label.type == 'number' || is(body[0][1], 'number')) {
+          series.sort(function(a, b) {
+            //console.log(options, self.schema, options.value, a.total, b.total);
+            if (options.value == 'asc') {
+              if (a.total > b.total) {
+                return 1;
+              } else {
+                return -1
+              }
+            } else {
+              if (a.total > b.total) {
+                return -1;
+              } else {
+                return 1
+              }
+            }
+            return false;
+          });
+          each(series, function(column, i){
+            header[index_cell+1+i] = series[i].label;
+            each(body, function(row, j){
+              row[index_cell+1+i] = series[i].values[j];
+            });
+          });
+          this.table = [header].concat(body);
+        }
       }();
     }
   }
 
-
-  /////////////////
+  ////////////////////
 
   if (self.action == 'reduce') {
     options = extend({
-      0: 'asc',
-      value: 'desc'
+      0: 'asc'
     }, opts);
     console.log(options);
   }
@@ -168,43 +199,6 @@ function _selection(options){
     }
     return root[0];
   })();
-
-  // Sort records by index
-  /*if (root instanceof Array) {
-    root.sort(function(a, b){
-      var sort_a_by, sort_b_by, sort_set, sort_dir;
-
-      // Configure sort options
-      if (index_set) {
-        sort_set = index_set;
-        sort_dir = options.sort.index;
-      } else if (label_set) {
-        sort_set = label_set;
-        sort_dir = options.sort.label;
-      }
-
-      // Retrieve target properties
-      sort_a_by = parse.apply(self, [a].concat(sort_set));
-      sort_b_by = parse.apply(self, [b].concat(sort_set));
-
-      // Return sort order
-      if (sort_dir == 'asc') {
-        if (sort_a_by > sort_b_by) {
-          return 1;
-        } else {
-          return -1
-        }
-      } else {
-        if (sort_a_by > sort_b_by) {
-          return -1;
-        } else {
-          return 1
-        }
-      }
-      return false;
-    });
-  }*/
-
 
   // Inject header row
   self.table.push([]);
@@ -270,7 +264,6 @@ function _selection(options){
   });
 
   self.sort(options.sort);
-
   return this;
 
   // ------------------------------

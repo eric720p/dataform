@@ -58,7 +58,8 @@ describe("dataform", function() {
             label: "value -> parsed_user_agent.os.family"
           },
           sort: {
-            index: 'asc'
+            index: 'asc',
+            value: 'desc'
           }
         });
         console.log('keen2.json', dataform);
