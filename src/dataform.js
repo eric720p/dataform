@@ -331,3 +331,11 @@ function extend(o, e){
   });
   return o;
 }
+
+
+// Configure moment.js if present
+!function(){
+  if (moment) {
+    moment.suppressDeprecationWarnings = true;
+  }
+}();
