@@ -1,3 +1,3 @@
 Dataform.prototype.average = function(){
-  return [5];
+  // return [5];
 };

@@ -1,3 +1,3 @@
 Dataform.prototype.mode = function(){
-  return [3];
+  // return [3];
 };
