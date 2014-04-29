@@ -431,9 +431,8 @@
 
 
   // Configure moment.js if present
-  var m = window.moment || moment || false;
-  if (m) {
-    m.suppressDeprecationWarnings = true;
+  if (moment) {
+    moment.suppressDeprecationWarnings = true;
   }
 
 // Source: src/lib/format.js
