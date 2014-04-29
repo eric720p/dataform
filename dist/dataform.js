@@ -102,6 +102,8 @@
     // Parse each record
     each(root, function(record, interval){
       var property_set = [];
+
+      // Retrieve row of properties
       each(target_set, function(target, i){
         var result = parse.apply(self, [record].concat(target));
         property_set.push(result[0]);
@@ -109,9 +111,9 @@
           self.table[0].push(target[target.length-1]);
         }
       });
-      each(property_set, function(row, i){
-        self.table.push(property_set);
-      });
+
+      // Add row of properties
+      self.table.push(property_set);
     });
 
     self.format(options.select);

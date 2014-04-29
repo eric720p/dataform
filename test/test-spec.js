@@ -294,7 +294,7 @@ describe("dataform", function() {
         console.log('keen_extraction.json 1', dataform);
 
         expect(dataform).to.have.property('table');
-        expect(dataform.table).to.be.of.length(28);
+        expect(dataform.table).to.be.of.length(response.result.length+1);
         expect(dataform.table[0]).to.be.of.length(3);
         expect(dataform.table[0][0]).to.eql("Time");
         expect(dataform.table[0][1]).to.eql("Page");
@@ -333,7 +333,7 @@ describe("dataform", function() {
         window.test = dataform;
 
         expect(dataform).to.have.property('table');
-        expect(dataform.table).to.be.of.length(28);
+        expect(dataform.table).to.be.of.length(response.result.length+1);
         expect(dataform.table[0]).to.be.of.length(3);
         expect(dataform.table[0][0]).to.eql("timestamp");
         expect(dataform.table[0][1]).to.eql("page");
