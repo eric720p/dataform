@@ -34,8 +34,8 @@ Dataform.prototype.configure = function(raw, schema){
         label: false
       },
       sort: {
-        index: 'asc',
-        value: 'desc'
+        index: false,
+        value: false
       }
     }, self.schema);
     options = _optHash(options);
@@ -116,8 +116,14 @@ function _unpack(options){
       label_set = (options.unpack.label) ? options.unpack.label.path.split(" -> ") : false,
       index_set = (options.unpack.index) ? options.unpack.index.path.split(" -> ") : false;
 
-  var sort_index = (options.sort.index) ? options.sort.index : 'asc',
-      sort_value = (options.sort.index) ? options.sort.index : 'desc';
+  var value_desc = (value_set[value_set.length-1] !== "") ? value_set[value_set.length-1] : "Value",
+      label_desc = (label_set[label_set.length-1] !== "") ? label_set[label_set.length-1] : "Label",
+      index_desc = (index_set[index_set.length-1] !== "") ? index_set[index_set.length-1] : "Index";
+
+  var sort_index = (options.sort.index) ? options.sort.index : false,
+      sort_value = (options.sort.value) ? options.sort.value : false;
+
+  //console.log(index_set, label_set, value_set);
 
   // Prepare root for parsing
   var root = (function(){
@@ -130,18 +136,33 @@ function _unpack(options){
     return root[0];
   })();
 
+  if (root instanceof Array == false) {
+    root = [root];
+  }
+
   // Inject data rows
   each(root, function(){
-    self.table.push([]);
+    //self.table.push([]);
   });
 
   // Parse each record
   each(root, function(record, interval){
+    //console.log('record', record);
 
     var plucked_value = (value_set) ? parse.apply(self, [record].concat(value_set)) : false,
         plucked_label = (label_set) ? parse.apply(self, [record].concat(label_set)) : false,
         plucked_index = (index_set) ? parse.apply(self, [record].concat(index_set)) : false;
-    //console.log(plucked_value, plucked_label, plucked_index);
+
+    //console.log(plucked_index, plucked_label, plucked_value);
+
+    // Inject row for each index
+    if (plucked_index) {
+      each(plucked_index, function(){
+        self.table.push([]);
+      });
+    } else {
+      self.table.push([]);
+    }
 
     // Build index column
     if (plucked_index) {
@@ -150,26 +171,38 @@ function _unpack(options){
       if (interval == 0) {
 
         // Push last index property to 0,0
-        self.table[0].push(index_set[index_set.length-1]);
+        self.table[0].push(index_desc);
 
         // Build subsequent series headers (1:N)
         if (plucked_label) {
           each(plucked_label, function(value, i){
             self.table[0].push(value);
           });
+
         } else {
-          self.table[0].push(value_set[value_set.length-1]);
+          self.table[0].push(value_desc);
         }
       }
 
-      self.table[interval+1].push(plucked_index[0]);
+      // Correct for odd root cases
+      if (root.length < self.table.length-1) {
+        if (interval == 0) {
+          each(self.table, function(row, i){
+            if (i > 0) {
+              self.table[i].push(plucked_index[i-1]);
+            }
+          });
+        }
+      } else {
+        self.table[interval+1].push(plucked_index[0]);
+      }
     }
 
     // Build label column
     if (!plucked_index && plucked_label) {
       if (interval == 0) {
-        self.table[0].push(label_set[label_set.length-1]);
-        self.table[0].push(value_set[value_set.length-1]);
+        self.table[0].push(label_desc);
+        self.table[0].push(value_desc);
       }
       self.table[interval+1].push(plucked_label[0]);
     }
@@ -181,9 +214,50 @@ function _unpack(options){
 
     // Append values
     if (plucked_value) {
-      each(plucked_value, function(value, i){
+      /*each(self.table, function(row, i){
+        if (i > 0) {
+          self.table[i].push(plucked_value[i-1]);
+        }
+      })*/
+
+      // Correct for odd root cases
+      if (root.length < self.table.length-1) {
+        if (interval == 0) {
+          each(self.table, function(row, i){
+            if (i > 0) {
+              self.table[i].push(plucked_value[i-1]);
+            }
+          });
+        }
+      } else {
+        each(plucked_value, function(value){
+          self.table[interval+1].push(value);
+        });
+      }
+
+      /*each(plucked_value, function(value, i){
+
+        if (plucked_index) {
+          if (plucked_label) {
+
+          } else {
+
+          }
+        }
+
+        if ((plucked_index && !plucked_label) || (!plucked_index && plucked_label)) {
+        }
+        if (plucked_index && plucked_label) {
+        }
+        if (!plucked_index && !plucked_label) {
+        }
+
+        if (self.table.length == plucked_value.length) {
+
+        }
+        //console.log(value, interval, plucked_value.length, self.table.length-1);
         self.table[interval+1].push(value);
-      });
+      });*/
     }
 
   });
@@ -229,7 +303,7 @@ function parse() {
 
     each(args, function(el){
 
-      //console.log('here', (target == ""), el, root);
+      //console.log('here', (target == ""), el, root[el]);
       if (target == "" && typeof el == "number") {
         //console.log('here', typeof(el), el);
         return result.push(el);
@@ -396,6 +470,8 @@ Dataform.prototype.format = function(opts){
 
 
   //////////////////////////////////
+
+
   if (self.action == 'unpack') {
     options = {};
     each(opts, function(option, key){
@@ -408,7 +484,11 @@ Dataform.prototype.format = function(opts){
 
     if (options.index) {
       each(self.table, function(row, i){
-        if (i > 0) {
+        if (i == 0) {
+          if (options.index.label) {
+            self.table[i][0] = options.index.label;
+          }
+        } else {
           self.table[i][0] = _applyFormat(self.table[i][0], options.index);
         }
       });
@@ -453,7 +533,6 @@ Dataform.prototype.format = function(opts){
           });
         });
       }
-
     }
 
   }
@@ -579,7 +658,7 @@ Dataform.prototype.sort = function(opts){
             } else {
               return -1
             }
-          } else {
+          } else if (options.index == 'desc') {
             if (a[0] > b[0]) {
               return -1;
             } else {
@@ -628,7 +707,7 @@ Dataform.prototype.sort = function(opts){
               } else {
                 return -1
               }
-            } else {
+            } else if (options.value == 'desc') {
               if (a.total > b.total) {
                 return -1;
               } else {
@@ -656,7 +735,7 @@ Dataform.prototype.sort = function(opts){
 
     options = extend({
       column: 0,
-      order: 'asc'
+      order: false
     }, opts);
 
     !function(){
@@ -671,7 +750,7 @@ Dataform.prototype.sort = function(opts){
           } else {
             return -1
           }
-        } else {
+        } else if (options.order == 'desc') {
           if (a[options.column] > b[options.column]) {
             return -1;
           } else {

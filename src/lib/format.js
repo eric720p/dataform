@@ -52,6 +52,8 @@ Dataform.prototype.format = function(opts){
 
 
   //////////////////////////////////
+
+
   if (self.action == 'unpack') {
     options = {};
     each(opts, function(option, key){
@@ -64,7 +66,11 @@ Dataform.prototype.format = function(opts){
 
     if (options.index) {
       each(self.table, function(row, i){
-        if (i > 0) {
+        if (i == 0) {
+          if (options.index.label) {
+            self.table[i][0] = options.index.label;
+          }
+        } else {
           self.table[i][0] = _applyFormat(self.table[i][0], options.index);
         }
       });
@@ -109,7 +115,6 @@ Dataform.prototype.format = function(opts){
           });
         });
       }
-
     }
 
   }

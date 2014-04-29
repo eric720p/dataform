@@ -21,7 +21,7 @@ Dataform.prototype.sort = function(opts){
             } else {
               return -1
             }
-          } else {
+          } else if (options.index == 'desc') {
             if (a[0] > b[0]) {
               return -1;
             } else {
@@ -70,7 +70,7 @@ Dataform.prototype.sort = function(opts){
               } else {
                 return -1
               }
-            } else {
+            } else if (options.value == 'desc') {
               if (a.total > b.total) {
                 return -1;
               } else {
@@ -98,7 +98,7 @@ Dataform.prototype.sort = function(opts){
 
     options = extend({
       column: 0,
-      order: 'asc'
+      order: false
     }, opts);
 
     !function(){
@@ -113,7 +113,7 @@ Dataform.prototype.sort = function(opts){
           } else {
             return -1
           }
-        } else {
+        } else if (options.order == 'desc') {
           if (a[options.column] > b[options.column]) {
             return -1;
           } else {

@@ -104,7 +104,8 @@ describe("dataform", function() {
             label: "value -> page"
           },
           sort: {
-            index: 'asc'
+            index: 'asc',
+            value: 'desc'
           }
         });
         console.log('keen.json 1', dataform);
@@ -329,6 +330,7 @@ describe("dataform", function() {
           }
         });
         console.log('keen_extraction.json 2', dataform);
+        window.test = dataform;
 
         expect(dataform).to.have.property('table');
         expect(dataform.table).to.be.of.length(28);
@@ -336,7 +338,41 @@ describe("dataform", function() {
         expect(dataform.table[0][0]).to.eql("timestamp");
         expect(dataform.table[0][1]).to.eql("page");
         expect(dataform.table[0][2]).to.eql("referrer");
-        // expect(dataform.table[1][0]).to.be.eql("2014-04-27T04:41:20.573Z");
+        //expect(dataform.table[1][0]).to.be.eql("2014-04-27T04:41:20.573Z");
+        done();
+      });
+    });
+
+    it("keen_funnel.json", function(done){
+      $.getJSON("./data/keen_funnel.json", function(response) {
+        var dataform = new Dataform(response, {
+          collection: "",
+          unpack: {
+            index: {
+              path: "steps -> event_collection",
+              type: "string",
+              label: "Event",
+              replace: {
+                "pageview": "Visit",
+                "signup": "Join",
+                "return-login": "Return",
+                "create-post": "Contrib",
+                "send-invite": "Invite"
+              }
+            },
+            value: {
+              path: "result -> ",
+              type: "number"
+            }
+          }
+        });
+        console.log('keen_funnel.json', dataform);
+        expect(dataform).to.have.property('table');
+        expect(dataform.table).to.be.of.length(6);
+        expect(dataform.table[0][0]).to.eql("Event");
+        expect(dataform.table[0][1]).to.eql("Value");
+        expect(dataform.table[1][0]).to.be.eql("Visit");
+        expect(dataform.table[1][1]).to.be.eql(42);
         done();
       });
     });
