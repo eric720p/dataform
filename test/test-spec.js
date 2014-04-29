@@ -330,18 +330,70 @@ describe("dataform", function() {
           }
         });
         console.log('keen_extraction.json 2', dataform);
-        window.test = dataform;
 
         expect(dataform).to.have.property('table');
         expect(dataform.table).to.be.of.length(response.result.length+1);
         expect(dataform.table[0]).to.be.of.length(3);
-        expect(dataform.table[0][0]).to.eql("timestamp");
+        expect(dataform.table[0][0]).to.eql("keen.timestamp");
         expect(dataform.table[0][1]).to.eql("page");
         expect(dataform.table[0][2]).to.eql("referrer");
         //expect(dataform.table[1][0]).to.be.eql("2014-04-27T04:41:20.573Z");
         done();
       });
     });
+
+
+    it("keen_uneven_extraction.json", function(done){
+      $.getJSON("./data/keen_uneven_extraction.json", function(response) {
+        var dataform = new Dataform(response, {
+          collection: "result",
+          select: [
+            {
+              path: "keen -> timestamp",
+              type: "date"
+            },
+            {
+              path: "page",
+              type: "string"
+            },
+            {
+              path: "key"
+            }
+          ]
+        });
+        console.log('keen_uneven_extraction.json', dataform);
+
+        expect(dataform).to.have.property('table');
+        expect(dataform.table).to.be.of.length(response.result.length+1);
+        /*expect(dataform.table[0]).to.be.of.length(3);
+        expect(dataform.table[0][0]).to.eql("keen.timestamp");
+        expect(dataform.table[0][1]).to.eql("page");
+        expect(dataform.table[0][2]).to.eql("referrer");*/
+        //expect(dataform.table[1][0]).to.be.eql("2014-04-27T04:41:20.573Z");
+        done();
+      });
+    });
+
+
+    it("keen_uneven_extraction.json SELECT ALL", function(done){
+      $.getJSON("./data/keen_uneven_extraction.json", function(response) {
+        var dataform = new Dataform(response, {
+          collection: "result",
+          select: true
+        });
+        console.log('keen_uneven_extraction.json SELECT ALL', dataform);
+
+        expect(dataform).to.have.property('table');
+        expect(dataform.table).to.be.of.length(response.result.length+1);
+        /*expect(dataform.table[0]).to.be.of.length(3);
+        expect(dataform.table[0][0]).to.eql("keen.timestamp");
+        expect(dataform.table[0][1]).to.eql("page");
+        expect(dataform.table[0][2]).to.eql("referrer");*/
+        //expect(dataform.table[1][0]).to.be.eql("2014-04-27T04:41:20.573Z");
+        done();
+      });
+    });
+
 
     it("keen_funnel.json", function(done){
       $.getJSON("./data/keen_funnel.json", function(response) {

@@ -34,7 +34,7 @@ Dataform.prototype.format = function(opts){
         // Replace labels
         if (i == 0) {
           each(row, function(cell, j){
-            if (options[j].label) {
+            if (options[j] && options[j].label) {
               self.table[i][j] = options[j].label;
             }
           });

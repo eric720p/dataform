@@ -61,6 +61,12 @@
 
   function _select(options){
     //console.log('Selecting', options);
+
+    // Todo: support assymetrical extractions
+    //   flatten each record
+    //   build header row from all unique keys
+    //   fill cells w/ empties when not found
+
     var self = this,
         target_set = [];
 
@@ -84,19 +90,34 @@
 
     // Parse each record
     each(root, function(record, interval){
-      var property_set = [];
 
-      // Retrieve row of properties
-      each(target_set, function(target, i){
-        var result = parse.apply(self, [record].concat(target));
-        property_set.push(result[0]);
-        if (interval == 0) {
-          self.table[0].push(target[target.length-1]);
+      var flat = flatten(record);
+      var keys = [];
+      self.table.push([]);
+
+      // Retrieve keys found in asymmetrical collections
+      if (interval == 0) {
+        if (target_set.length == 0) {
+          each(root, function(_record, _interval){
+            var _flat = flatten(_record);
+            for (var _key in _flat) {
+              if (_flat.hasOwnProperty(_key) && keys.indexOf(_key) == -1) {
+                keys.push(_key);
+                target_set.push([_key]);
+              }
+            }
+          });
         }
+      }
+
+      each(target_set, function(target, i){
+        var flat_target = target.join(".");
+        if (interval == 0) {
+          self.table[0].push(flat_target);
+        }
+        self.table[interval+1].push(flat[flat_target] || null)
       });
 
-      // Add row of properties
-      self.table.push(property_set);
     });
 
     self.format(options.select);
@@ -354,6 +375,24 @@
       }
     };
     return loop.apply(this, arguments);
+  }
+
+  // Awesome via: https://gist.github.com/penguinboy/762197
+  function flatten(ob) {
+    var toReturn = {};
+    for (var i in ob) {
+      if (!ob.hasOwnProperty(i)) continue;
+      if ((typeof ob[i]) == 'object') {
+        var flatObject = flatten(ob[i]);
+        for (var x in flatObject) {
+          if (!flatObject.hasOwnProperty(x)) continue;
+          toReturn[i + '.' + x] = flatObject[x];
+        }
+      } else {
+        toReturn[i] = ob[i];
+      }
+    }
+    return toReturn;
   }
 
 
