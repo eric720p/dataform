@@ -377,6 +377,49 @@ describe("dataform", function() {
       });
     });
 
+
+
+    it("keen_2xgroupby.json", function(done){
+      $.getJSON("./data/keen_2xgroupby.json", function(response) {
+        var dataform = new Dataform(response, {
+          collection: "result",
+          unpack: {
+            index: {
+              path: "timeframe -> start",
+              type: "date",
+              //label: "Event",
+              /*replace: {
+                "pageview": "Visit",
+                "signup": "Join",
+                "return-login": "Return",
+                "create-post": "Contrib",
+                "send-invite": "Invite"
+              }*/
+            },
+            value: {
+              path: "value -> result",
+              type: "number"
+            },
+            label: {
+              path: "value -> first.property",
+              type: "string",
+              replace: {
+                //"/": "Home"
+              }
+            }
+          }
+        });
+        console.log('keen_2xgroupby.json', dataform);
+        expect(dataform).to.have.property('table');
+        /*expect(dataform.table).to.be.of.length(6);
+        expect(dataform.table[0][0]).to.eql("Event");
+        expect(dataform.table[0][1]).to.eql("Value");
+        expect(dataform.table[1][0]).to.be.eql("Visit");
+        expect(dataform.table[1][1]).to.be.eql(42);*/
+        done();
+      });
+    });
+
   });
 
 });
