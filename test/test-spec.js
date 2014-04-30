@@ -387,7 +387,7 @@ describe("dataform", function() {
         expect(dataform.table).to.be.of.length(response.result.length+1);
         expect(dataform.table[0]).to.be.of.length(7);
         expect(dataform.table[0][0]).to.eql("keen.timestamp");
-        expect(dataform.table[1][0]).to.be.eql("2014-02-12T01:44:25.310Z");
+        expect(dataform.table[1][0]).to.be.eql("2014-02-12T01:26:48.875Z");
         done();
       });
     });
