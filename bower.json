@@ -1,6 +1,6 @@
 {
   "name": "dataform",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "main": "./dist/dataform.js",
   "authors": [
     "Dustin Larimer <dustin@keen.io>"
