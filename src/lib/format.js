@@ -180,7 +180,7 @@ function _applyFormat(value, opts){
 
   if (options.type && options.type == 'number') {
 
-    if (options.format && typeof parseFloat(output) == "number") {
+    if (options.format && !isNaN(parseFloat(output))) {
 
       output = parseFloat(output);
 
