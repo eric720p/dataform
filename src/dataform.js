@@ -279,12 +279,12 @@
 
       each(args, function(el){
 
-        //console.log('here', (target == ""), el, root[el]);
-        if (target == "" && typeof el == "number") {
-          //console.log('here', typeof(el), el);
-          return result.push(el);
+        // Grab the numbers and nulls
+        if (target == "") {
+          if (typeof el == "number" || el == null) {
+            return result.push(el);
+          }
         }
-        //
 
         if (el[target] || el[target] === 0 || el[target] !== void 0) {
           // Easy grab!

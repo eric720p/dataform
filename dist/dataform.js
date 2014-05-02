@@ -296,12 +296,12 @@
 
       each(args, function(el){
 
-        //console.log('here', (target == ""), el, root[el]);
-        if (target == "" && typeof el == "number") {
-          //console.log('here', typeof(el), el);
-          return result.push(el);
+        // Grab the numbers and nulls
+        if (target == "") {
+          if (typeof el == "number" || el == null) {
+            return result.push(el);
+          }
         }
-        //
 
         if (el[target] || el[target] === 0 || el[target] !== void 0) {
           // Easy grab!
@@ -612,7 +612,10 @@ function _applyFormat(value, opts){
   }
 
   if (options.type && options.type == 'number') {
-    if (options.format) {
+
+    if (options.format && typeof parseFloat(output) == "number") {
+
+      output = parseFloat(output);
 
       // Set decimals
       if (options.format.indexOf('.') !== -1) {
