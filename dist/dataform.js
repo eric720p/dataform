@@ -436,7 +436,7 @@ Dataform.prototype.format = function(opts){
 
     var defaults = {
       'number': {
-        format: '1,000.00',
+        format: '0', // 1,000.00
         prefix: '',
         suffix: ''
         //modifier: '*1'
@@ -570,6 +570,14 @@ function _applyFormat(value, opts){
     }
   }
 
+  if (options.replace) {
+    each(options.replace, function(value, key){
+      if (output == key || String(output) == String(key) || parseFloat(output) == parseFloat(key)) {
+        output = value;
+      }
+    });
+  }
+
   if (options.type && options.type == 'date') {
 
     if (options.format && moment && moment(value).isValid()) {
@@ -601,14 +609,6 @@ function _applyFormat(value, opts){
       }
     }
 
-    if (options.replace) {
-      each(options.replace, function(value, key){
-        if (output == key) {
-          output = value;
-        }
-      });
-    }
-
   }
 
   if (options.type && options.type == 'number') {
@@ -629,10 +629,11 @@ function _applyFormat(value, opts){
       // Set commas
       if (options.format.indexOf(',') !== -1) {
         output = (function(num){
-          while (/(\d+)(\d{3})/.test(num.toString())){
-            num = num.toString().replace(/(\d+)(\d{3})/, '$1'+','+'$2');
+          var split = String(num).split(".");
+          while (/(\d+)(\d{3})/.test(split[0])){
+            split[0] = split[0].replace(/(\d+)(\d{3})/, '$1'+','+'$2');
           }
-          return num;
+          return split.join(".");
         })(output);
       }
 

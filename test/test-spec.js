@@ -248,6 +248,9 @@ describe("dataform", function() {
             {
               path: "result",
               type: "number",
+              replace: {
+                null: 2450
+              },
               label: "Metric",
               format: "1,000.00",
               prefix: "$",
