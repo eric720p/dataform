@@ -473,6 +473,41 @@ describe("dataform", function() {
       });
     });
 
+
+    it("keen_empty.json", function(done){
+      $.getJSON("./data/keen_empty.json", function(response) {
+        var dataform = new Dataform(response, {
+          collection: "result",
+          unpack: {
+            index: {
+              path: "timeframe -> start",
+              type: "date"
+            },
+            value: {
+              path: "value -> result",
+              type: "number"
+            },
+            label: {
+              path: "value -> parsed_user_agent.os.family",
+              type: "string"
+            }
+          }
+        });
+        console.log('keen_empty.json', dataform);
+        expect(dataform).to.have.property('table');
+        expect(dataform.table).to.be.of.length(7);
+        /*
+        expect(dataform.table[0][0]).to.eql("Event");
+        expect(dataform.table[0][1]).to.eql("Value");
+        expect(dataform.table[1][0]).to.be.eql("Visit");
+        expect(dataform.table[1][1]).to.be.eql(42);*/
+        done();
+      });
+    });
+
   });
+
+
+
 
 });

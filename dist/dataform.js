@@ -135,7 +135,7 @@
 
   function _unpack(options){
     // console.log('Unpacking', options);
-    var self = this;
+    var self = this, discovered_labels = [];
 
     var value_set = (options.unpack.value) ? options.unpack.value.path.split(" -> ") : false,
         label_set = (options.unpack.label) ? options.unpack.label.path.split(" -> ") : false,
@@ -164,9 +164,12 @@
       root = [root];
     }
 
-    // Inject data rows
-    each(root, function(){
-      //self.table.push([]);
+    // Find labels
+    each(root, function(record, interval){
+      var labels = (label_set) ? parse.apply(self, [record].concat(label_set)) : [];
+      if (labels) {
+        discovered_labels = labels;
+      }
     });
 
     // Parse each record
@@ -174,7 +177,7 @@
       //console.log('record', record);
 
       var plucked_value = (value_set) ? parse.apply(self, [record].concat(value_set)) : false,
-          plucked_label = (label_set) ? parse.apply(self, [record].concat(label_set)) : false,
+          //plucked_label = (label_set) ? parse.apply(self, [record].concat(label_set)) : false,
           plucked_index = (index_set) ? parse.apply(self, [record].concat(index_set)) : false;
       //console.log(plucked_index, plucked_label, plucked_value);
 
@@ -197,8 +200,8 @@
           self.table[0].push(index_desc);
 
           // Build subsequent series headers (1:N)
-          if (plucked_label) {
-            each(plucked_label, function(value, i){
+          if (discovered_labels.length > 0) {
+            each(discovered_labels, function(value, i){
               self.table[0].push(value);
             });
 
@@ -222,15 +225,15 @@
       }
 
       // Build label column
-      if (!plucked_index && plucked_label) {
+      if (!plucked_index && discovered_labels.length > 0) {
         if (interval == 0) {
           self.table[0].push(label_desc);
           self.table[0].push(value_desc);
         }
-        self.table[interval+1].push(plucked_label[0]);
+        self.table[interval+1].push(discovered_labels[0]);
       }
 
-      if (!plucked_index && !plucked_label) {
+      if (!plucked_index && discovered_labels.length == 0) {
         // [REVISIT]
         self.table[0].push('');
       }
@@ -251,6 +254,14 @@
             self.table[interval+1].push(value);
           });
         }
+      } else {
+        // append null across this row
+        each(self.table[0], function(cell, i){
+          var offset = (plucked_index) ? 0 : -1;
+          if (i > offset) {
+            self.table[interval+1].push(null);
+          }
+        })
       }
 
     });
@@ -332,10 +343,12 @@
             }
           }
 
+        } else if (typeof root === 'object' && root instanceof Array === false && !root[target]) {
+          throw new Error("Target property does not exist", target);
+
         } else {
           // dive down a level!
           return loop.apply(this, [el].concat(args.splice(1)).concat(target));
-
         }
 
         return;
@@ -426,7 +439,7 @@
 
 
   // Configure moment.js if present
-  if (moment) {
+  if (window.moment) {
     moment.suppressDeprecationWarnings = true;
   }
 
