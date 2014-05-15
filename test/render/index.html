@@ -4,7 +4,7 @@
   <title>dataform</title>
   <style>
   table {
-    margin: 0 0 10px;
+    margin: 10px 0;
   }
   table, tr, th, td {
     border-collapse: collapse;
@@ -35,12 +35,17 @@
         $("div#canvas").html("");
         $.getJSON(resource, function(response) {
           //console.log(response);
-          if (response instanceof Array == false) {
-            Dataform.each(response, function(value, key){
-              make(response, key);
-            });
-          } else {
+          if (response instanceof Array) {
             make(response, '');
+          } else {
+            Dataform.each(response, function(value, key){
+              if (typeof value == "number") {
+                make(response, '');
+              } else {
+                make(response, key);
+              }
+              //console.log(value, key);
+            });
           }
         });
       }
@@ -80,6 +85,7 @@
 <body>
   <div id="toolbar">
     <select id="resource-picker">
+      <option value="./">Select a resource</option>
       <option value="/data/git-traffic-data.json">Github analytics</value>
       <option value="/data/twitter.json">Twitter feed</value>
       <!--<option value="/data/keen.json">Keen IO response</value>-->
