@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>dataform</title>
+  <style>
+  table {
+    margin: 0 0 10px;
+  }
+  table, tr, th, td {
+    border-collapse: collapse;
+    border: 1px solid #d7d7d7;
+  }
+  th, td {
+    padding: 5px 10px;
+  }
+  </style>
+  <script src="../assets/jquery/dist/jquery.min.js"></script>
+  <script src="../assets/momentjs/moment.js"></script>
+
+  <script src="../dist/dataform.js"></script>
+
+  <script>
+		$(function(){
+
+      var urlParam = getParameterByName("url") || false;
+      if (urlParam) {
+        run(urlParam);
+      }
+
+      $("select#resource-picker").on("change", function(value){
+        run(this.value);
+      });
+
+      function run(resource, record){
+        $("div#canvas").html("");
+        $.getJSON(resource, function(response) {
+          //console.log(response);
+          if (response instanceof Array == false) {
+            Dataform.each(response, function(value, key){
+              make(response, key);
+            });
+          } else {
+            make(response, '');
+          }
+        });
+      }
+
+      function make(data, collection){
+        var _id = Math.floor(Math.random() * (100 - 1 + 1)) + 1;
+        var dataform = new Dataform(data, {
+          collection: collection,
+          select: true
+        });
+        console.log(dataform);
+        Dataform.each(dataform.table, function(row, index){
+          if (index == 0) {
+            $("div#canvas").append("<table id='" + _id + "'><thead></thead><tbody></tbody></table>");
+            $("table#" + _id + " thead").append("<tr></tr>");
+            Dataform.each(row, function(cell){
+              $("table#" + _id + " thead tr").append("<th>" + cell + "</th>");
+            });
+          } else {
+            $("table#" + _id + " tbody").append("<tr></tr>");
+            Dataform.each(row, function(cell){
+              $("table#" + _id + " tbody tr:eq(" + (index-1) + ")").append("<td>" + cell + "</td>");
+            });
+          }
+        });
+      }
+
+      function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+      }
+    });
+	</script>
+</head>
+<body>
+  <div id="toolbar">
+    <select id="resource-picker">
+      <option value="/data/git-traffic-data.json">Github analytics</value>
+      <option value="/data/twitter.json">Twitter feed</value>
+      <!--<option value="/data/keen.json">Keen IO response</value>-->
+      <option value="/data/keen2.json">Keen IO Grouped Interval</value>
+      <option value="/data/keen_extraction.json">Keen IO extraction</value>
+      <option value="/data/keen_uneven_extraction.json">Keen IO UNEVEN extraction</value>
+      <option value="/data/keen_groupby.json">Keen IO GroupBy</value>
+      <option value="/data/keen_2xgroupby.json">Keen IO 2x-GroupBy</value>
+
+      <option value="/data/keen_funnel.json">Keen IO funnel</value>
+      <option value="/data/keen_metric.json">Keen IO metric</value>
+      <option value="/data/keen_empty.json">Keen IO empty response</value>
+
+    </select>
+  </div>
+  <div id="canvas"></div>
+</body>
+</html>
