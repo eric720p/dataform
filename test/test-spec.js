@@ -505,6 +505,32 @@ describe("dataform", function() {
       });
     });
 
+    it("keen_grouped_booleans.json", function(done){
+      $.getJSON("./data/keen_grouped_booleans.json", function(response) {
+        var dataform = new Dataform(response, {
+          collection: "result",
+          unpack: {
+            index: {
+              path: "timeframe -> start",
+              type: "date"
+            },
+            value: {
+              path: "value -> result",
+              type: "number"
+            },
+            label: {
+              path: "value -> key",
+              type: "string"
+            }
+          }
+        });
+        console.log('keen_grouped_booleans.json', dataform);
+        expect(dataform).to.have.property('table');
+        expect(dataform.table).to.be.of.length(7);
+        done();
+      });
+    });
+
   });
 
 

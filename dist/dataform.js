@@ -170,6 +170,14 @@
       var labels = (label_set) ? parse.apply(self, [record].concat(label_set)) : [];
       if (labels) {
         discovered_labels = labels;
+        console.log(discovered_labels);
+      }
+    });
+
+    // Temp: turn booleans into strings
+    each(discovered_labels, function(label, index){
+      if (typeof label === 'boolean') {
+        discovered_labels[index] = String(label);
       }
     });
 
@@ -460,9 +468,9 @@ Dataform.prototype.format = function(opts){
 
     var defaults = {
       'number': {
-        format: '0', // 1,000.00
-        prefix: '',
-        suffix: ''
+        //format: '0', // 1,000.00
+        //prefix: '',
+        //suffix: ''
         //modifier: '*1'
       },
       'date': {

@@ -153,6 +153,14 @@
       var labels = (label_set) ? parse.apply(self, [record].concat(label_set)) : [];
       if (labels) {
         discovered_labels = labels;
+        console.log(discovered_labels);
+      }
+    });
+
+    // Temp: turn booleans into strings
+    each(discovered_labels, function(label, index){
+      if (typeof label === 'boolean') {
+        discovered_labels[index] = String(label);
       }
     });
 

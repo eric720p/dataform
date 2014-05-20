@@ -3,6 +3,10 @@
 <head>
   <title>dataform</title>
   <style>
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12px;
+  }
   table {
     margin: 10px 0;
   }
@@ -12,6 +16,9 @@
   }
   th, td {
     padding: 5px 10px;
+  }
+  input[type=text] {
+    width: 500px;
   }
   </style>
   <script src="../assets/jquery/dist/jquery.min.js"></script>
@@ -24,11 +31,16 @@
 
       var urlParam = getParameterByName("url") || false;
       if (urlParam) {
-        run(urlParam);
+        run(urlParam + "&callback=?");
       }
 
-      $("select#resource-picker").on("change", function(value){
+      $("select#resource-picker").on("change", function(){
         run(this.value);
+      });
+
+      $("#resource-search").on("submit", function(e){
+        e.preventDefault();
+        run($("#resource-search input[type=text]").val());
       });
 
       function run(resource, record){
@@ -100,6 +112,10 @@
       <option value="/data/keen_empty.json">Keen IO empty response</value>
 
     </select>
+    <form id="resource-search" style="display: inline-block">
+      <input type="text">
+      <input type="submit" value="Submit">
+    </form>
   </div>
   <div id="canvas"></div>
 </body>

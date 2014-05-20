@@ -3,9 +3,9 @@ Dataform.prototype.format = function(opts){
 
     var defaults = {
       'number': {
-        format: '0', // 1,000.00
-        prefix: '',
-        suffix: ''
+        //format: '0', // 1,000.00
+        //prefix: '',
+        //suffix: ''
         //modifier: '*1'
       },
       'date': {
