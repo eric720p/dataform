@@ -58,7 +58,7 @@ module.exports = function(grunt) {
       test: {
         options: {
           base: 'test',
-          port: 9999
+          port: 8888
         }
       }
     }

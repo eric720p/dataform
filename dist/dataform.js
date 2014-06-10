@@ -602,9 +602,9 @@ function _applyFormat(value, opts){
   }
 
   if (options.replace) {
-    each(options.replace, function(value, key){
+    each(options.replace, function(val, key){
       if (output == key || String(output) == String(key) || parseFloat(output) == parseFloat(key)) {
-        output = value;
+        output = val;
       }
     });
   }
@@ -612,14 +612,16 @@ function _applyFormat(value, opts){
   if (options.type && options.type == 'date') {
 
     if (options.format && moment && moment(value).isValid()) {
-      output = moment(value).format(options.format);
+      output = moment(output).format(options.format);
     } else {
-      output = new Date(value); //.toISOString();
+      output = new Date(output); //.toISOString();
     }
 
   }
 
   if (options.type && options.type == 'string') {
+
+    output = String(output);
 
     if (options.format) {
       switch (options.format) {
@@ -642,11 +644,11 @@ function _applyFormat(value, opts){
 
   }
 
-  if (options.type && options.type == 'number') {
+  if (options.type && options.type == 'number' && !isNaN(parseFloat(output))) {
 
-    if (options.format && !isNaN(parseFloat(output))) {
+    output = parseFloat(output);
 
-      output = parseFloat(output);
+    if (options.format) {
 
       // Set decimals
       if (options.format.indexOf('.') !== -1) {
@@ -681,8 +683,6 @@ function _applyFormat(value, opts){
 
   return output;
 }
-
-// dataform.format(index, options);
 
 // Source: src/lib/sort.js
 Dataform.prototype.sort = function(opts){

@@ -505,8 +505,8 @@ describe("dataform", function() {
       });
     });
 
-    it("keen_grouped_booleans.json", function(done){
-      $.getJSON("./data/keen_grouped_booleans.json", function(response) {
+    it("keen_grouped_interval_booleans.json", function(done){
+      $.getJSON("./data/keen_grouped_interval_booleans.json", function(response) {
         var dataform = new Dataform(response, {
           collection: "result",
           unpack: {
@@ -524,9 +524,37 @@ describe("dataform", function() {
             }
           }
         });
-        console.log('keen_grouped_booleans.json', dataform);
+        console.log('keen_grouped_interval_booleans.json', dataform);
         expect(dataform).to.have.property('table');
         expect(dataform.table).to.be.of.length(7);
+        done();
+      });
+    });
+
+
+    it("keen_grouped_booleans.json", function(done){
+      $.getJSON("./data/keen_grouped_booleans.json", function(response) {
+        var dataform = new Dataform(response, {
+          collection: "result",
+          select: [
+            {
+              path: "switch",
+              type: "string"
+            },
+            {
+              path: "result",
+              type: "number"
+            }
+          ],
+          sort: {
+            column: 1,
+            order: 'desc'
+          }
+        });
+        console.log('keen_grouped_booleans.json', dataform);
+        expect(dataform).to.have.property('table');
+        expect(dataform.table).to.be.of.length(4);
+        expect(dataform.table[1][0]).to.eql("true");
         done();
       });
     });
