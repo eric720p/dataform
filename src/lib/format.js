@@ -128,12 +128,19 @@ function _applyFormat(value, opts){
       options = opts || {};
 
   if (options.method) {
-    var copy = output;
-    try {
-      output = eval(options.method).apply(null, [output, options]);
-    }
-    catch (e) {
-      output = copy;
+    var copy = output, method = window;
+    each(options.method.split("."), function(str, i){
+      if (method[str]){
+        method = method[str];
+      }
+    });
+    if (typeof method === 'function') {
+      try {
+        output = method.apply(null, [output, options]);
+      }
+      catch (e) {
+        output = copy;
+      }
     }
   }
 

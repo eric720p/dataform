@@ -103,7 +103,12 @@
         if (interval == 0) {
           self.table[0].push(flat_target);
         }
-        self.table[interval+1].push(flat[flat_target] || null)
+        if (typeof(flat[flat_target]) || typeof flat[flat_target] == 'boolean') {
+          self.table[interval+1].push(flat[flat_target]);
+        } else {
+          self.table[interval+1].push(null);
+        }
+
       });
     });
 
@@ -157,11 +162,11 @@
     });
 
     // Temp: turn booleans into strings
-    each(discovered_labels, function(label, index){
+    /*each(discovered_labels, function(label, index){
       if (typeof label === 'boolean') {
         discovered_labels[index] = String(label);
       }
-    });
+    });*/
 
     // Parse each record
     each(root, function(record, interval){

@@ -555,6 +555,7 @@ describe("dataform", function() {
         expect(dataform).to.have.property('table');
         expect(dataform.table).to.be.of.length(4);
         expect(dataform.table[1][0]).to.eql("true");
+        expect(dataform.table[2][0]).to.eql("false");
         done();
       });
     });
