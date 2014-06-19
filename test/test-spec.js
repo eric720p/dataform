@@ -69,11 +69,19 @@ describe("dataform", function() {
         var dataform = new Dataform(response, {
           collection: "result",
           unpack: {
-            index: "timeframe -> start",
-            value: "value -> result",
+            index: {
+              path: "timeframe -> start",
+              type: "date"
+            },
+            value: {
+              path: "value -> result",
+              type: "number"
+              , replace: { null: 0 }
+            },
             label: {
               path: "value -> parsed_user_agent.os.family",
               type: "string"
+              , replace: { null: "" }
               //format: "lowercase"
             }
           },

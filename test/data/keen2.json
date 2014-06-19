@@ -4,11 +4,11 @@
       "value": [
         {
           "parsed_user_agent.os.family": "Windows Vista",
-          "result": 0
+          "result": null
         },
         {
           "parsed_user_agent.os.family": null,
-          "result": 0
+          "result": null
         }
       ],
       "timeframe": {
@@ -24,7 +24,7 @@
         },
         {
           "parsed_user_agent.os.family": null,
-          "result": 0
+          "result": null
         }
       ],
       "timeframe": {
